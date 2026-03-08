@@ -7,11 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { ProdutoComEstoque } from '@/lib/supabase';
+import { useExcluirProduto } from '@/hooks/useProdutos';
 import EditarProdutoDialog from '@/components/EditarProdutoDialog';
 import AjustarEstoqueDialog from '@/components/AjustarEstoqueDialog';
 import HistoricoProdutoDialog from '@/components/HistoricoProdutoDialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 
-type DialogType = 'editar' | 'ajustar' | 'historico';
+type DialogType = 'editar' | 'ajustar' | 'historico' | 'excluir';
 
 export default function Estoque() {
   const { data: produtos = [], isLoading } = useProdutos();
