@@ -21,6 +21,7 @@ export default function Estoque() {
   const [search, setSearch] = useState('');
   const [selectedProduto, setSelectedProduto] = useState<ProdutoComEstoque | null>(null);
   const [dialogType, setDialogType] = useState<DialogType | null>(null);
+  const excluir = useExcluirProduto();
 
   const filtered = produtos.filter(p =>
     p.nome_produto.toLowerCase().includes(search.toLowerCase()) ||
