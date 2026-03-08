@@ -67,6 +67,24 @@ export function useCadastrarProduto() {
   });
 }
 
+export function useExcluirProduto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (produtoId: string) => {
+      // Delete movimentacoes, then lotes, then produto
+      await supabase.from('movimentacoes').delete().eq('produto_id', produtoId);
+      await supabase.from('lotes').delete().eq('produto_id', produtoId);
+      const { error } = await supabase.from('produtos').delete().eq('id', produtoId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['produtos'] });
+      qc.invalidateQueries({ queryKey: ['lotes'] });
+      qc.invalidateQueries({ queryKey: ['movimentacoes'] });
+    },
+  });
+}
+
 export function useRegistrarCompra() {
   const qc = useQueryClient();
   return useMutation({

@@ -136,6 +136,14 @@ export default function Estoque() {
                               </TooltipTrigger>
                               <TooltipContent>Ver histórico</TooltipContent>
                             </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => openDialog(p, 'excluir')}>
+                                  <Trash2 size={15} />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Excluir</TooltipContent>
+                            </Tooltip>
                           </div>
                         </TooltipProvider>
                       </TableCell>
