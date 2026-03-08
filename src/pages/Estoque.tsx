@@ -172,6 +172,35 @@ export default function Estoque() {
       {selectedProduto && dialogType === 'historico' && (
         <HistoricoProdutoDialog produto={selectedProduto} open onOpenChange={(o) => !o && closeDialog()} />
       )}
+      {selectedProduto && dialogType === 'excluir' && (
+        <AlertDialog open onOpenChange={(o) => !o && closeDialog()}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir produto</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir <strong>{selectedProduto.nome_produto}</strong>? Todos os lotes e movimentações relacionados serão removidos. Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={async () => {
+                  try {
+                    await excluir.mutateAsync(selectedProduto.id);
+                    toast.success('Produto excluído!');
+                    closeDialog();
+                  } catch (err: any) {
+                    toast.error(err.message || 'Erro ao excluir');
+                  }
+                }}
+              >
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
