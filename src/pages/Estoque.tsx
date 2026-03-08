@@ -1,23 +1,27 @@
 import { useProdutos } from '@/hooks/useProdutos';
 import { format, parseISO, differenceInDays } from 'date-fns';
-import { Search, Pencil, PackagePlus, History } from 'lucide-react';
+import { Search, Pencil, PackagePlus, History, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { ProdutoComEstoque } from '@/lib/supabase';
+import { useExcluirProduto } from '@/hooks/useProdutos';
 import EditarProdutoDialog from '@/components/EditarProdutoDialog';
 import AjustarEstoqueDialog from '@/components/AjustarEstoqueDialog';
 import HistoricoProdutoDialog from '@/components/HistoricoProdutoDialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 
-type DialogType = 'editar' | 'ajustar' | 'historico';
+type DialogType = 'editar' | 'ajustar' | 'historico' | 'excluir';
 
 export default function Estoque() {
   const { data: produtos = [], isLoading } = useProdutos();
   const [search, setSearch] = useState('');
   const [selectedProduto, setSelectedProduto] = useState<ProdutoComEstoque | null>(null);
   const [dialogType, setDialogType] = useState<DialogType | null>(null);
+  const excluir = useExcluirProduto();
 
   const filtered = produtos.filter(p =>
     p.nome_produto.toLowerCase().includes(search.toLowerCase()) ||
@@ -132,6 +136,14 @@ export default function Estoque() {
                               </TooltipTrigger>
                               <TooltipContent>Ver histórico</TooltipContent>
                             </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => openDialog(p, 'excluir')}>
+                                  <Trash2 size={15} />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Excluir</TooltipContent>
+                            </Tooltip>
                           </div>
                         </TooltipProvider>
                       </TableCell>
@@ -159,6 +171,35 @@ export default function Estoque() {
       )}
       {selectedProduto && dialogType === 'historico' && (
         <HistoricoProdutoDialog produto={selectedProduto} open onOpenChange={(o) => !o && closeDialog()} />
+      )}
+      {selectedProduto && dialogType === 'excluir' && (
+        <AlertDialog open onOpenChange={(o) => !o && closeDialog()}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir produto</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir <strong>{selectedProduto.nome_produto}</strong>? Todos os lotes e movimentações relacionados serão removidos. Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={async () => {
+                  try {
+                    await excluir.mutateAsync(selectedProduto.id);
+                    toast.success('Produto excluído!');
+                    closeDialog();
+                  } catch (err: any) {
+                    toast.error(err.message || 'Erro ao excluir');
+                  }
+                }}
+              >
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </div>
   );
