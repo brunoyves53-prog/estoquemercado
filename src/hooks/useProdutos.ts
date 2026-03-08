@@ -154,3 +154,86 @@ export function useProdutoPorCodigo() {
     },
   });
 }
+
+export function useAtualizarProduto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { id: string } & Partial<Omit<Produto, 'id' | 'created_at'>>) => {
+      const { id, ...updates } = params;
+      const { data, error } = await supabase.from('produtos').update(updates).eq('id', id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['produtos'] }),
+  });
+}
+
+export function useAjustarEstoque() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { produto_id: string; quantidade: number; tipo_ajuste: 'entrada' | 'saida' }) => {
+      if (params.tipo_ajuste === 'entrada') {
+        // Create a new lote for the entry
+        const { data: lote, error: loteErr } = await supabase
+          .from('lotes')
+          .insert({ produto_id: params.produto_id, quantidade_lote: params.quantidade })
+          .select()
+          .single();
+        if (loteErr) throw loteErr;
+
+        const { error: movErr } = await supabase.from('movimentacoes').insert({
+          produto_id: params.produto_id,
+          lote_id: lote.id,
+          tipo: 'ajuste',
+          quantidade: params.quantidade,
+        });
+        if (movErr) throw movErr;
+      } else {
+        // FEFO withdrawal for adjustment
+        const { data: lotes, error: lotesErr } = await supabase
+          .from('lotes')
+          .select('*')
+          .eq('produto_id', params.produto_id)
+          .gt('quantidade_lote', 0)
+          .order('data_validade', { ascending: true, nullsFirst: false });
+        if (lotesErr) throw lotesErr;
+
+        let remaining = params.quantidade;
+        for (const lote of (lotes || [])) {
+          if (remaining <= 0) break;
+          const take = Math.min(remaining, lote.quantidade_lote);
+          await supabase.from('lotes').update({ quantidade_lote: lote.quantidade_lote - take }).eq('id', lote.id);
+          await supabase.from('movimentacoes').insert({
+            produto_id: params.produto_id,
+            lote_id: lote.id,
+            tipo: 'ajuste',
+            quantidade: -take,
+          });
+          remaining -= take;
+        }
+        if (remaining > 0) throw new Error('Estoque insuficiente para o ajuste');
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['produtos'] });
+      qc.invalidateQueries({ queryKey: ['lotes'] });
+      qc.invalidateQueries({ queryKey: ['movimentacoes'] });
+    },
+  });
+}
+
+export function useMovimentacoesProduto(produtoId?: string) {
+  return useQuery({
+    queryKey: ['movimentacoes', produtoId],
+    enabled: !!produtoId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('movimentacoes')
+        .select('*')
+        .eq('produto_id', produtoId!)
+        .order('data_movimentacao', { ascending: false });
+      if (error) throw error;
+      return data as Movimentacao[];
+    },
+  });
+}
