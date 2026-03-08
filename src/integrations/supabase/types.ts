@@ -14,7 +14,113 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      lotes: {
+        Row: {
+          created_at: string
+          data_compra: string
+          data_validade: string | null
+          id: string
+          produto_id: string
+          quantidade_lote: number
+        }
+        Insert: {
+          created_at?: string
+          data_compra?: string
+          data_validade?: string | null
+          id?: string
+          produto_id: string
+          quantidade_lote?: number
+        }
+        Update: {
+          created_at?: string
+          data_compra?: string
+          data_validade?: string | null
+          id?: string
+          produto_id?: string
+          quantidade_lote?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lotes_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      movimentacoes: {
+        Row: {
+          data_movimentacao: string
+          id: string
+          lote_id: string | null
+          produto_id: string
+          quantidade: number
+          tipo: string
+        }
+        Insert: {
+          data_movimentacao?: string
+          id?: string
+          lote_id?: string | null
+          produto_id: string
+          quantidade: number
+          tipo: string
+        }
+        Update: {
+          data_movimentacao?: string
+          id?: string
+          lote_id?: string | null
+          produto_id?: string
+          quantidade?: number
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimentacoes_lote_id_fkey"
+            columns: ["lote_id"]
+            isOneToOne: false
+            referencedRelation: "lotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimentacoes_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      produtos: {
+        Row: {
+          codigo_barras: string
+          created_at: string
+          id: string
+          media_venda_mensal: number
+          nome_produto: string
+          preco_compra: number
+          preco_venda: number
+        }
+        Insert: {
+          codigo_barras: string
+          created_at?: string
+          id?: string
+          media_venda_mensal?: number
+          nome_produto: string
+          preco_compra?: number
+          preco_venda?: number
+        }
+        Update: {
+          codigo_barras?: string
+          created_at?: string
+          id?: string
+          media_venda_mensal?: number
+          nome_produto?: string
+          preco_compra?: number
+          preco_venda?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
