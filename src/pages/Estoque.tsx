@@ -40,11 +40,11 @@ export default function Estoque() {
 
   return (
     <div className="page-container">
-      <div className="page-header">
-        <h1 className="text-xl font-bold">Estoque</h1>
+      <div className="px-6 py-4 border-b border-border">
+        <h1 className="text-2xl font-display font-bold">Estoque</h1>
       </div>
-      <div className="p-4 space-y-3">
-        <div className="relative">
+      <div className="p-6 space-y-4">
+        <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
           <Input
             placeholder="Buscar produto ou código..."
@@ -57,7 +57,7 @@ export default function Estoque() {
         {isLoading && <p className="text-center text-sm text-muted-foreground py-8">Carregando...</p>}
 
         {!isLoading && (
-          <div className="overflow-x-auto rounded-lg border">
+          <div className="overflow-x-auto rounded-2xl border border-border bg-card">
             <Table>
               <TableHeader>
                 <TableRow>

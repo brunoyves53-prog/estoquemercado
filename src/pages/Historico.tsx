@@ -2,7 +2,7 @@ import { useMovimentacoes } from '@/hooks/useProdutos';
 import { format, parseISO } from 'date-fns';
 import { ArrowDown, ArrowUp, Settings2 } from 'lucide-react';
 
-const tipoConfig = {
+const tipoConfig: Record<string, { label: string; icon: typeof ArrowDown; color: string }> = {
   compra: { label: 'Compra', icon: ArrowDown, color: 'text-success' },
   retirada: { label: 'Retirada', icon: ArrowUp, color: 'text-destructive' },
   ajuste: { label: 'Ajuste', icon: Settings2, color: 'text-muted-foreground' },
@@ -13,17 +13,17 @@ export default function Historico() {
 
   return (
     <div className="page-container">
-      <div className="page-header">
-        <h1 className="text-xl font-bold">Histórico</h1>
+      <div className="px-6 py-4 border-b border-border">
+        <h1 className="text-2xl font-display font-bold">Histórico</h1>
       </div>
 
-      <div className="p-4 space-y-2">
+      <div className="p-6 space-y-2">
         {isLoading && <p className="text-center text-sm text-muted-foreground py-8">Carregando...</p>}
         {movimentacoes.length === 0 && !isLoading && (
           <p className="text-center text-sm text-muted-foreground py-8">Nenhuma movimentação registrada</p>
         )}
         {movimentacoes.map(m => {
-          const config = tipoConfig[m.tipo];
+          const config = tipoConfig[m.tipo] || tipoConfig.ajuste;
           const Icon = config.icon;
           return (
             <div key={m.id} className="stat-card flex items-center gap-3 py-3">

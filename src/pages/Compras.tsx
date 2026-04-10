@@ -84,21 +84,20 @@ export default function Compras() {
 
   return (
     <div className="page-container">
-      <div className="page-header">
-        <h1 className="text-xl font-bold">Registrar Compra</h1>
+      <div className="px-6 py-4 border-b border-border">
+        <h1 className="text-2xl font-display font-bold">Registrar Compra</h1>
       </div>
 
       {showScanner && (
         <BarcodeScanner onScan={handleScan} onClose={() => setShowScanner(false)} />
       )}
 
-      <div className="p-4 space-y-4">
+      <div className="p-6 space-y-4 max-w-2xl">
         <Button size="xl" className="w-full" variant="outline" onClick={() => setShowScanner(true)}>
           <ScanBarcode size={24} />
           Escanear Código de Barras
         </Button>
 
-        {/* Search */}
         <div className="relative">
           <Label className="text-xs text-muted-foreground mb-1 block">Buscar Produto</Label>
           <div className="relative">
@@ -127,9 +126,8 @@ export default function Compras() {
           )}
         </div>
 
-        {/* Selected product info */}
         {selectedNome && (
-          <div className="stat-card bg-primary/5 border-primary/20">
+          <div className="stat-card border-primary/30">
             <p className="text-sm font-semibold">{selectedNome}</p>
             <p className="text-xs text-muted-foreground font-mono">{selectedCodigo}</p>
           </div>
@@ -149,28 +147,13 @@ export default function Compras() {
           <>
             <div>
               <Label className="text-xs text-muted-foreground mb-1 block">Quantidade Comprada</Label>
-              <Input
-                type="number"
-                inputMode="numeric"
-                placeholder="Ex: 50"
-                value={quantidade}
-                onChange={(e) => setQuantidade(e.target.value)}
-              />
+              <Input type="number" inputMode="numeric" placeholder="Ex: 50" value={quantidade} onChange={(e) => setQuantidade(e.target.value)} />
             </div>
             <div>
               <Label className="text-xs text-muted-foreground mb-1 block">Data de Validade (opcional)</Label>
-              <Input
-                type="date"
-                value={validade}
-                onChange={(e) => setValidade(e.target.value)}
-              />
+              <Input type="date" value={validade} onChange={(e) => setValidade(e.target.value)} />
             </div>
-            <Button
-              size="xl"
-              className="w-full"
-              onClick={handleSubmit}
-              disabled={registrar.isPending}
-            >
+            <Button size="xl" className="w-full" onClick={handleSubmit} disabled={registrar.isPending}>
               {registrar.isPending ? 'Registrando...' : 'Registrar Compra'}
             </Button>
           </>

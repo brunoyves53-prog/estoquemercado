@@ -56,11 +56,11 @@ export default function Retiradas() {
 
   return (
     <div className="page-container">
-      <div className="page-header">
-        <h1 className="text-xl font-bold">Registrar Retirada</h1>
+      <div className="px-6 py-4 border-b border-border">
+        <h1 className="text-2xl font-display font-bold">Registrar Retirada</h1>
       </div>
 
-      <div className="p-4 space-y-4">
+      <div className="p-6 space-y-4 max-w-2xl">
         <div className="relative">
           <Label className="text-xs text-muted-foreground mb-1 block">Buscar Produto</Label>
           <div className="relative">
@@ -96,30 +96,17 @@ export default function Retiradas() {
 
         {selectedNome && (
           <>
-            <div className="stat-card bg-accent/10 border-accent/20">
+            <div className="stat-card border-accent/30">
               <p className="text-sm font-semibold">{selectedNome}</p>
               <p className="text-xs text-muted-foreground">Estoque disponível: <span className="font-bold">{estoqueAtual}</span> un.</p>
             </div>
 
             <div>
               <Label className="text-xs text-muted-foreground mb-1 block">Quantidade para Retirada</Label>
-              <Input
-                type="number"
-                inputMode="numeric"
-                placeholder="Ex: 10"
-                value={quantidade}
-                onChange={(e) => setQuantidade(e.target.value)}
-                max={estoqueAtual}
-              />
+              <Input type="number" inputMode="numeric" placeholder="Ex: 10" value={quantidade} onChange={(e) => setQuantidade(e.target.value)} max={estoqueAtual} />
             </div>
 
-            <Button
-              size="xl"
-              className="w-full"
-              variant="success"
-              onClick={handleSubmit}
-              disabled={retirar.isPending}
-            >
+            <Button size="xl" className="w-full" variant="success" onClick={handleSubmit} disabled={retirar.isPending}>
               {retirar.isPending ? 'Registrando...' : 'Confirmar Retirada'}
             </Button>
           </>

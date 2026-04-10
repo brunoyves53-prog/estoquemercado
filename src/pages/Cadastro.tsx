@@ -23,23 +23,13 @@ export default function Cadastro() {
   const [duplicateNome, setDuplicateNome] = useState('');
 
   const verificarCodigo = useCallback(async (code: string) => {
-    if (!code.trim()) {
-      setCodigoStatus('idle');
-      return;
-    }
+    if (!code.trim()) { setCodigoStatus('idle'); return; }
     setCodigoStatus('checking');
     try {
       const produto = await buscarPorCodigo.mutateAsync(code.trim());
-      if (produto) {
-        setCodigoStatus('duplicate');
-        setDuplicateNome(produto.nome_produto);
-      } else {
-        setCodigoStatus('available');
-        setDuplicateNome('');
-      }
-    } catch {
-      setCodigoStatus('idle');
-    }
+      if (produto) { setCodigoStatus('duplicate'); setDuplicateNome(produto.nome_produto); }
+      else { setCodigoStatus('available'); setDuplicateNome(''); }
+    } catch { setCodigoStatus('idle'); }
   }, [buscarPorCodigo]);
 
   const handleScan = useCallback((code: string) => {
@@ -49,25 +39,12 @@ export default function Cadastro() {
     verificarCodigo(code);
   }, [verificarCodigo]);
 
-  const handleCodigoChange = (value: string) => {
-    setCodigo(value);
-    setCodigoStatus('idle');
-    setDuplicateNome('');
-  };
-
-  const handleCodigoBlur = () => {
-    verificarCodigo(codigo);
-  };
+  const handleCodigoChange = (value: string) => { setCodigo(value); setCodigoStatus('idle'); setDuplicateNome(''); };
+  const handleCodigoBlur = () => { verificarCodigo(codigo); };
 
   const handleSubmit = async () => {
-    if (!nome || !codigo) {
-      toast.error('Nome e código de barras são obrigatórios');
-      return;
-    }
-    if (codigoStatus === 'duplicate') {
-      toast.error('Este código de barras já está cadastrado para outro produto.');
-      return;
-    }
+    if (!nome || !codigo) { toast.error('Nome e código de barras são obrigatórios'); return; }
+    if (codigoStatus === 'duplicate') { toast.error('Este código de barras já está cadastrado.'); return; }
     try {
       await cadastrar.mutateAsync({
         nome_produto: nome.trim(),
@@ -77,32 +54,25 @@ export default function Cadastro() {
         media_venda_mensal: parseFloat(mediaVenda) || 0,
       });
       toast.success('Produto cadastrado!');
-      setNome('');
-      setCodigo('');
-      setPrecoCompra('');
-      setPrecoVenda('');
-      setMediaVenda('');
-      setCodigoStatus('idle');
+      setNome(''); setCodigo(''); setPrecoCompra(''); setPrecoVenda(''); setMediaVenda(''); setCodigoStatus('idle');
     } catch (err: any) {
       if (err.message?.includes('unique') || err.message?.includes('duplicate')) {
         toast.error('Já existe um produto com este nome ou código de barras');
-      } else {
-        toast.error(err.message || 'Erro ao cadastrar');
-      }
+      } else { toast.error(err.message || 'Erro ao cadastrar'); }
     }
   };
 
   return (
     <div className="page-container">
-      <div className="page-header">
-        <h1 className="text-xl font-bold">Cadastrar Produto</h1>
+      <div className="px-6 py-4 border-b border-border">
+        <h1 className="text-2xl font-display font-bold">Cadastrar Produto</h1>
       </div>
 
       {showScanner && (
         <BarcodeScanner onScan={handleScan} onClose={() => setShowScanner(false)} />
       )}
 
-      <div className="p-4 space-y-4">
+      <div className="p-6 space-y-4 max-w-2xl">
         <div>
           <Label className="text-xs text-muted-foreground mb-1 block">Nome do Produto *</Label>
           <Input placeholder="Ex: Arroz Integral 1kg" value={nome} onChange={(e) => setNome(e.target.value)} />
@@ -118,13 +88,7 @@ export default function Cadastro() {
               onBlur={handleCodigoBlur}
               className="flex-1"
             />
-            <Button
-              variant="outline"
-              size="icon"
-              className="shrink-0 h-10 w-12"
-              onClick={() => setShowScanner(true)}
-              type="button"
-            >
+            <Button variant="outline" size="icon" className="shrink-0 h-10 w-12" onClick={() => setShowScanner(true)} type="button">
               <ScanBarcode size={20} />
             </Button>
           </div>
@@ -133,11 +97,10 @@ export default function Cadastro() {
             <div className="mt-2 flex items-start gap-2 rounded-lg bg-destructive/10 border border-destructive/30 p-3">
               <AlertTriangle size={16} className="text-destructive shrink-0 mt-0.5" />
               <p className="text-xs text-destructive">
-                Este código de barras já está cadastrado para o produto: <strong>{duplicateNome}</strong>
+                Este código já está cadastrado para: <strong>{duplicateNome}</strong>
               </p>
             </div>
           )}
-
           {codigoStatus === 'available' && (
             <div className="mt-2 flex items-center gap-2 rounded-lg bg-success/10 border border-success/30 p-2">
               <CheckCircle2 size={14} className="text-success shrink-0" />
@@ -146,13 +109,7 @@ export default function Cadastro() {
           )}
         </div>
 
-        <Button
-          size="xl"
-          variant="outline"
-          className="w-full"
-          onClick={() => setShowScanner(true)}
-          type="button"
-        >
+        <Button size="xl" variant="outline" className="w-full" onClick={() => setShowScanner(true)} type="button">
           <ScanBarcode size={24} />
           Escanear Código de Barras
         </Button>
@@ -171,12 +128,7 @@ export default function Cadastro() {
           <Label className="text-xs text-muted-foreground mb-1 block">Média de Venda Mensal</Label>
           <Input type="number" inputMode="numeric" placeholder="Ex: 30" value={mediaVenda} onChange={(e) => setMediaVenda(e.target.value)} />
         </div>
-        <Button
-          size="xl"
-          className="w-full"
-          onClick={handleSubmit}
-          disabled={cadastrar.isPending || codigoStatus === 'duplicate'}
-        >
+        <Button size="xl" className="w-full" onClick={handleSubmit} disabled={cadastrar.isPending || codigoStatus === 'duplicate'}>
           {cadastrar.isPending ? 'Cadastrando...' : 'Cadastrar Produto'}
         </Button>
       </div>
