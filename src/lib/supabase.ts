@@ -8,6 +8,7 @@ export type Produto = {
   preco_compra: number;
   preco_venda: number;
   media_venda_mensal: number;
+  imagem_url: string | null;
   created_at: string;
 };
 
