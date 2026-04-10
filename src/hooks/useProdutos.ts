@@ -58,7 +58,7 @@ export function useMovimentacoes() {
 export function useCadastrarProduto() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (produto: Omit<Produto, 'id' | 'created_at'>) => {
+    mutationFn: async (produto: Omit<Produto, 'id' | 'created_at' | 'imagem_url'>) => {
       const { data, error } = await supabase.from('produtos').insert(produto).select().single();
       if (error) throw error;
       return data;

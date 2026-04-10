@@ -1,29 +1,26 @@
 import { useState, useEffect } from 'react';
-import { useProdutos, useRegistrarCompra, useProdutoPorCodigo } from '@/hooks/useProdutos';
+import { useProdutos, useRegistrarCompra } from '@/hooks/useProdutos';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ScanBarcode, Search } from 'lucide-react';
+import { ScanBarcode, Package } from 'lucide-react';
 import BarcodeScanner from '@/components/BarcodeScanner';
+import ProductAutocomplete from '@/components/ProductAutocomplete';
 import { toast } from 'sonner';
+import { ProdutoComEstoque } from '@/lib/supabase';
 
 export default function Compras() {
   const { data: produtos = [] } = useProdutos();
   const registrar = useRegistrarCompra();
-  const buscarPorCodigo = useProdutoPorCodigo();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const [showScanner, setShowScanner] = useState(false);
-  const [search, setSearch] = useState('');
-  const [selectedId, setSelectedId] = useState('');
-  const [selectedNome, setSelectedNome] = useState('');
-  const [selectedCodigo, setSelectedCodigo] = useState('');
+  const [selected, setSelected] = useState<ProdutoComEstoque | null>(null);
   const [quantidade, setQuantidade] = useState('');
   const [validade, setValidade] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [notFound, setNotFound] = useState(false);
+  const [notFoundCode, setNotFoundCode] = useState('');
 
   useEffect(() => {
     if (searchParams.get('scan') === 'true') {
@@ -31,50 +28,32 @@ export default function Compras() {
     }
   }, [searchParams]);
 
-  const suggestions = search.length > 0
-    ? produtos.filter(p =>
-        p.nome_produto.toLowerCase().includes(search.toLowerCase()) ||
-        p.codigo_barras.includes(search)
-      ).slice(0, 5)
-    : [];
-
-  const selectProduto = (id: string, nome: string, codigo: string) => {
-    setSelectedId(id);
-    setSelectedNome(nome);
-    setSelectedCodigo(codigo);
-    setSearch('');
-    setShowSuggestions(false);
-    setNotFound(false);
-  };
-
-  const handleScan = async (code: string) => {
+  const handleScan = (code: string) => {
     setShowScanner(false);
     const found = produtos.find(p => p.codigo_barras === code);
     if (found) {
-      selectProduto(found.id, found.nome_produto, found.codigo_barras);
+      setSelected(found);
+      setNotFoundCode('');
       toast.success(`Produto encontrado: ${found.nome_produto}`);
     } else {
-      setNotFound(true);
-      setSelectedCodigo(code);
+      setNotFoundCode(code);
       toast.info('Produto não cadastrado');
     }
   };
 
   const handleSubmit = async () => {
-    if (!selectedId || !quantidade) {
+    if (!selected || !quantidade) {
       toast.error('Selecione um produto e informe a quantidade');
       return;
     }
     try {
       await registrar.mutateAsync({
-        produto_id: selectedId,
+        produto_id: selected.id,
         quantidade: parseInt(quantidade),
         data_validade: validade || null,
       });
       toast.success('Compra registrada!');
-      setSelectedId('');
-      setSelectedNome('');
-      setSelectedCodigo('');
+      setSelected(null);
       setQuantidade('');
       setValidade('');
     } catch (err: any) {
@@ -98,52 +77,38 @@ export default function Compras() {
           Escanear Código de Barras
         </Button>
 
-        <div className="relative">
-          <Label className="text-xs text-muted-foreground mb-1 block">Buscar Produto</Label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-            <Input
-              placeholder="Nome ou código de barras..."
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setShowSuggestions(true); }}
-              onFocus={() => setShowSuggestions(true)}
-              className="pl-10"
-            />
-          </div>
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute z-20 w-full mt-1 bg-card border border-border rounded-lg shadow-lg overflow-hidden">
-              {suggestions.map(p => (
-                <button
-                  key={p.id}
-                  className="w-full text-left px-4 py-3 hover:bg-muted transition-colors border-b border-border last:border-0"
-                  onClick={() => selectProduto(p.id, p.nome_produto, p.codigo_barras)}
-                >
-                  <p className="text-sm font-medium">{p.nome_produto}</p>
-                  <p className="text-xs text-muted-foreground font-mono">{p.codigo_barras}</p>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <ProductAutocomplete
+          produtos={produtos}
+          onSelect={(p) => { setSelected(p); setNotFoundCode(''); }}
+        />
 
-        {selectedNome && (
-          <div className="stat-card border-primary/30">
-            <p className="text-sm font-semibold">{selectedNome}</p>
-            <p className="text-xs text-muted-foreground font-mono">{selectedCodigo}</p>
+        {selected && (
+          <div className="stat-card border-primary/30 flex items-center gap-3">
+            <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border/50">
+              {selected.imagem_url ? (
+                <img src={selected.imagem_url} alt={selected.nome_produto} className="h-full w-full object-cover" />
+              ) : (
+                <Package size={20} className="text-muted-foreground" />
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-semibold">{selected.nome_produto}</p>
+              <p className="text-xs text-muted-foreground font-mono">{selected.codigo_barras}</p>
+            </div>
           </div>
         )}
 
-        {notFound && !selectedId && (
+        {notFoundCode && !selected && (
           <div className="stat-card border-warning/40">
             <p className="text-sm text-warning font-medium">Produto não encontrado no cadastro</p>
-            <p className="text-xs text-muted-foreground mb-2">Código: {selectedCodigo}</p>
-            <Button size="sm" onClick={() => navigate(`/cadastro?codigo=${selectedCodigo}`)}>
+            <p className="text-xs text-muted-foreground mb-2">Código: {notFoundCode}</p>
+            <Button size="sm" onClick={() => navigate(`/cadastro?codigo=${notFoundCode}`)}>
               Cadastrar novo produto
             </Button>
           </div>
         )}
 
-        {selectedId && (
+        {selected && (
           <>
             <div>
               <Label className="text-xs text-muted-foreground mb-1 block">Quantidade Comprada</Label>

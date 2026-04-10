@@ -96,6 +96,7 @@ export type Database = {
           codigo_barras: string
           created_at: string
           id: string
+          imagem_url: string | null
           media_venda_mensal: number
           nome_produto: string
           preco_compra: number
@@ -105,6 +106,7 @@ export type Database = {
           codigo_barras: string
           created_at?: string
           id?: string
+          imagem_url?: string | null
           media_venda_mensal?: number
           nome_produto: string
           preco_compra?: number
@@ -114,6 +116,7 @@ export type Database = {
           codigo_barras?: string
           created_at?: string
           id?: string
+          imagem_url?: string | null
           media_venda_mensal?: number
           nome_produto?: string
           preco_compra?: number
