@@ -6,23 +6,23 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 220 20% 10%;
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
+    --card: 217 33% 17%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
+    --popover: 217 33% 17%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 220 70% 50%;
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 20% 93%;
-    --secondary-foreground: 220 20% 20%;
+    --secondary: 217 33% 22%;
+    --secondary-foreground: 210 40% 90%;
 
-    --muted: 210 15% 95%;
-    --muted-foreground: 220 10% 45%;
+    --muted: 217 33% 15%;
+    --muted-foreground: 215 20% 55%;
 
     --accent: 160 60% 45%;
     --accent-foreground: 0 0% 100%;
@@ -36,53 +36,23 @@
     --success: 160 60% 45%;
     --success-foreground: 0 0% 100%;
 
-    --border: 214 20% 88%;
-    --input: 214 20% 88%;
-    --ring: 220 70% 50%;
+    --border: 217 33% 22%;
+    --input: 217 33% 22%;
+    --ring: 217 91% 60%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 222 47% 8%;
+    --sidebar-foreground: 210 40% 85%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 33% 15%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 18%;
+    --sidebar-ring: 217 91% 60%;
 
     --font-display: 'Space Grotesk', sans-serif;
     --font-body: 'Inter', sans-serif;
-  }
-
-  .dark {
-    --background: 220 20% 7%;
-    --foreground: 210 20% 95%;
-    --card: 220 20% 10%;
-    --card-foreground: 210 20% 95%;
-    --popover: 220 20% 10%;
-    --popover-foreground: 210 20% 95%;
-    --primary: 220 70% 55%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 15% 18%;
-    --secondary-foreground: 210 20% 90%;
-    --muted: 220 15% 15%;
-    --muted-foreground: 215 15% 55%;
-    --accent: 160 60% 45%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 220 15% 20%;
-    --input: 220 15% 20%;
-    --ring: 220 70% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -104,7 +74,7 @@
 
 @layer components {
   .stat-card {
-    @apply bg-card rounded-xl p-4 shadow-sm border border-border;
+    @apply bg-card rounded-2xl p-4 shadow-sm border border-border;
   }
 
   .action-button {
@@ -113,11 +83,11 @@
   }
 
   .page-container {
-    @apply min-h-screen bg-background pb-24;
+    @apply min-h-screen pb-4;
   }
 
   .page-header {
-    @apply sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-4 py-3;
+    @apply sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-4;
     font-family: var(--font-display);
   }
 
@@ -132,5 +102,63 @@
 
   .mobile-nav-item.active {
     @apply text-primary;
+  }
+}
+
+/* Beams Background */
+@keyframes beam-move-1 {
+  0%, 100% { transform: translateY(-100%) rotate(45deg); opacity: 0; }
+  10% { opacity: 0.15; }
+  50% { opacity: 0.08; }
+  90% { opacity: 0; }
+}
+
+@keyframes beam-move-2 {
+  0%, 100% { transform: translateY(-100%) rotate(-30deg); opacity: 0; }
+  15% { opacity: 0.1; }
+  55% { opacity: 0.05; }
+  95% { opacity: 0; }
+}
+
+.beams-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.beams-bg::before,
+.beams-bg::after {
+  content: '';
+  position: absolute;
+  width: 300px;
+  height: 200%;
+  top: 0;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    hsl(217 91% 60% / 0.06),
+    hsl(160 60% 45% / 0.04),
+    transparent
+  );
+  filter: blur(60px);
+}
+
+.beams-bg::before {
+  left: 15%;
+  animation: beam-move-1 18s ease-in-out infinite;
+}
+
+.beams-bg::after {
+  right: 20%;
+  animation: beam-move-2 22s ease-in-out infinite 3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beams-bg::before,
+  .beams-bg::after {
+    animation: none;
+    opacity: 0.05;
   }
 }

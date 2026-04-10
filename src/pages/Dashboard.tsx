@@ -22,46 +22,46 @@ export default function Dashboard() {
 
   return (
     <div className="page-container">
-      <div className="page-header">
-        <h1 className="text-xl font-bold">Gestão de Estoque</h1>
-        <p className="text-xs text-muted-foreground">{format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
+      <div className="px-6 py-4 border-b border-border">
+        <h1 className="text-2xl font-display font-bold">Gestão de Estoque</h1>
+        <p className="text-sm text-muted-foreground">{format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
       </div>
 
-      <div className="p-4 space-y-4">
+      <div className="p-6 space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="stat-card">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Package size={16} />
               <span className="text-xs font-medium">Produtos</span>
             </div>
-            <p className="text-2xl font-display font-bold">{totalProdutos}</p>
+            <p className="text-3xl font-display font-bold">{totalProdutos}</p>
           </div>
           <div className="stat-card">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Package size={16} />
               <span className="text-xs font-medium">Itens em Estoque</span>
             </div>
-            <p className="text-2xl font-display font-bold">{totalEstoque}</p>
+            <p className="text-3xl font-display font-bold">{totalEstoque}</p>
           </div>
           <div className="stat-card border-warning/30">
             <div className="flex items-center gap-2 text-warning mb-1">
               <TrendingDown size={16} />
               <span className="text-xs font-medium">Estoque Baixo</span>
             </div>
-            <p className="text-2xl font-display font-bold text-warning">{estoqueBaixo}</p>
+            <p className="text-3xl font-display font-bold text-warning">{estoqueBaixo}</p>
           </div>
           <div className="stat-card border-destructive/30">
             <div className="flex items-center gap-2 text-destructive mb-1">
               <Calendar size={16} />
               <span className="text-xs font-medium">Vencendo (30d)</span>
             </div>
-            <p className="text-2xl font-display font-bold text-destructive">{vencendo}</p>
+            <p className="text-3xl font-display font-bold text-destructive">{vencendo}</p>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-4">
           <button onClick={() => navigate('/compras')} className="action-button bg-primary text-primary-foreground">
             <ShoppingCart size={28} />
             <span className="text-sm">Compra</span>
@@ -93,7 +93,7 @@ export default function Dashboard() {
 
         {/* Recent movements */}
         <div>
-          <h2 className="text-sm font-display font-semibold mb-2 text-muted-foreground">Últimas Movimentações</h2>
+          <h2 className="text-sm font-display font-semibold mb-3 text-muted-foreground uppercase tracking-wider">Últimas Movimentações</h2>
           <div className="space-y-2">
             {ultimasMovs.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhuma movimentação registrada</p>}
             {ultimasMovs.map((m) => (

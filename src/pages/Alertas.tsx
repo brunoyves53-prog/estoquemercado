@@ -13,14 +13,13 @@ export default function Alertas() {
 
   return (
     <div className="page-container">
-      <div className="page-header">
-        <h1 className="text-xl font-bold">Alertas</h1>
+      <div className="px-6 py-4 border-b border-border">
+        <h1 className="text-2xl font-display font-bold">Alertas</h1>
       </div>
 
-      <div className="p-4 space-y-4">
-        {/* Low stock */}
+      <div className="p-6 space-y-6">
         <div>
-          <h2 className="flex items-center gap-2 text-sm font-display font-semibold text-warning mb-2">
+          <h2 className="flex items-center gap-2 text-sm font-display font-semibold text-warning mb-3 uppercase tracking-wider">
             <TrendingDown size={16} />
             Estoque Baixo ({estoqueBaixo.length})
           </h2>
@@ -43,9 +42,8 @@ export default function Alertas() {
           ))}
         </div>
 
-        {/* Expiring */}
         <div>
-          <h2 className="flex items-center gap-2 text-sm font-display font-semibold text-destructive mb-2">
+          <h2 className="flex items-center gap-2 text-sm font-display font-semibold text-destructive mb-3 uppercase tracking-wider">
             <Calendar size={16} />
             Vencendo em 30 dias ({vencendo.length})
           </h2>

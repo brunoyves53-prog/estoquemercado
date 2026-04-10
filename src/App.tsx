@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import MobileNav from "./components/MobileNav";
+import AppLayout from "./components/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Estoque from "./pages/Estoque";
 import Compras from "./pages/Compras";
@@ -21,17 +21,18 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/estoque" element={<Estoque />} />
-          <Route path="/compras" element={<Compras />} />
-          <Route path="/retiradas" element={<Retiradas />} />
-          <Route path="/alertas" element={<Alertas />} />
-          <Route path="/cadastro" element={<Cadastro />} />
-          <Route path="/historico" element={<Historico />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <MobileNav />
+        <AppLayout>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/estoque" element={<Estoque />} />
+            <Route path="/compras" element={<Compras />} />
+            <Route path="/retiradas" element={<Retiradas />} />
+            <Route path="/alertas" element={<Alertas />} />
+            <Route path="/cadastro" element={<Cadastro />} />
+            <Route path="/historico" element={<Historico />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AppLayout>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
