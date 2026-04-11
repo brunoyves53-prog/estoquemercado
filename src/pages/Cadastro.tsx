@@ -135,7 +135,8 @@ export default function Cadastro() {
       toast.error('Erro ao enviar foto: ' + (err.message || 'Tente novamente'));
     } finally {
       setUploadingPhoto(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (cameraInputRef.current) cameraInputRef.current.value = '';
+      if (galleryInputRef.current) galleryInputRef.current.value = '';
     }
   }, []);
 
