@@ -170,6 +170,7 @@ export default function Cadastro() {
     setDuplicateNome('');
     setImagemUrl(null);
     setMarca('');
+    setProdutoNaoEncontrado(false);
   };
   const handleCodigoBlur = () => { verificarCodigo(codigo); };
 
