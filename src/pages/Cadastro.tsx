@@ -74,7 +74,9 @@ export default function Cadastro() {
   const [codigoStatus, setCodigoStatus] = useState<'idle' | 'checking' | 'available' | 'duplicate'>('idle');
   const [duplicateNome, setDuplicateNome] = useState('');
   const [buscandoAPI, setBuscandoAPI] = useState(false);
-
+  const [produtoNaoEncontrado, setProdutoNaoEncontrado] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const resetarFormulario = useCallback(() => {
     setNome('');
     setImagemUrl(null);
