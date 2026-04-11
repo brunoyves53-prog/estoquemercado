@@ -1,5 +1,5 @@
 import { useProdutos } from '@/hooks/useProdutos';
-import { format, parseISO, differenceInDays } from 'date-fns';
+import { format, parseISO, differenceInDays, isValid } from 'date-fns';
 import { Search, Pencil, PackagePlus, History, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
