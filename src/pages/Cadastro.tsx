@@ -230,6 +230,37 @@ export default function Cadastro() {
           </div>
         )}
 
+        {/* Photo capture when product not found */}
+        {produtoNaoEncontrado && !imagemUrl && !buscandoAPI && (
+          <div className="stat-card border-accent/30 flex flex-col items-center gap-3 py-5">
+            <Package size={40} className="text-muted-foreground" />
+            <p className="text-sm font-medium text-center">Produto não encontrado nas bases externas</p>
+            <p className="text-xs text-muted-foreground text-center">Tire uma foto do produto para cadastrar com imagem</p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handlePhotoCapture}
+            />
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingPhoto}
+              type="button"
+            >
+              {uploadingPhoto ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Camera size={18} />
+              )}
+              {uploadingPhoto ? 'Enviando...' : 'Tirar Foto do Produto'}
+            </Button>
+          </div>
+        )}
+
         <div>
           <Label className="text-xs text-muted-foreground mb-1 block">Nome do Produto *</Label>
           <Input placeholder="Ex: Arroz Integral 1kg" value={nome} onChange={(e) => setNome(e.target.value)} />
