@@ -1,12 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useCadastrarProduto, useProdutoPorCodigo } from '@/hooks/useProdutos';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ScanBarcode, AlertTriangle, CheckCircle2, Package, Loader2 } from 'lucide-react';
+import { ScanBarcode, AlertTriangle, CheckCircle2, Package, Loader2, Camera } from 'lucide-react';
 import BarcodeScanner from '@/components/BarcodeScanner';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface OpenFoodFactsResult {
   nome: string;
