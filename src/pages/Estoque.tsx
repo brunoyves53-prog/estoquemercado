@@ -73,7 +73,9 @@ export default function Estoque() {
               </TableHeader>
               <TableBody>
                 {filtered.map(p => {
-                  const daysToExpiry = p.proxima_validade ? differenceInDays(parseISO(p.proxima_validade), new Date()) : null;
+                  const parsedDate = p.proxima_validade ? parseISO(p.proxima_validade) : null;
+                  const validDate = parsedDate && isValid(parsedDate) ? parsedDate : null;
+                  const daysToExpiry = validDate ? differenceInDays(validDate, new Date()) : null;
                   const isLowStock = p.estoque_total < p.media_venda_mensal;
                   const isExpiring = daysToExpiry !== null && daysToExpiry <= 30;
 
