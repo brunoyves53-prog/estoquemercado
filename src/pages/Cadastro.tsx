@@ -14,21 +14,47 @@ interface OpenFoodFactsResult {
   imagemUrl: string | null;
 }
 
-async function buscarOpenFoodFacts(codigo: string): Promise<OpenFoodFactsResult | null> {
+async function buscarProdutoExterno(codigo: string): Promise<OpenFoodFactsResult | null> {
+  // 1) Open Food Facts (world)
   try {
     const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${codigo}.json`);
-    if (!res.ok) return null;
-    const json = await res.json();
-    if (json.status !== 1 || !json.product) return null;
-    const p = json.product;
-    return {
-      nome: p.product_name || p.product_name_pt || '',
-      marca: p.brands || '',
-      imagemUrl: p.image_url || p.image_front_url || null,
-    };
-  } catch {
-    return null;
-  }
+    if (res.ok) {
+      const json = await res.json();
+      if (json.status === 1 && json.product) {
+        const p = json.product;
+        const nome = p.product_name || p.product_name_pt || '';
+        if (nome) return { nome, marca: p.brands || '', imagemUrl: p.image_url || p.image_front_url || null };
+      }
+    }
+  } catch { /* continue */ }
+
+  // 2) Open Food Facts (BR)
+  try {
+    const res = await fetch(`https://br.openfoodfacts.org/api/v2/product/${codigo}.json`);
+    if (res.ok) {
+      const json = await res.json();
+      if (json.status === 1 && json.product) {
+        const p = json.product;
+        const nome = p.product_name || p.product_name_pt || '';
+        if (nome) return { nome, marca: p.brands || '', imagemUrl: p.image_url || p.image_front_url || null };
+      }
+    }
+  } catch { /* continue */ }
+
+  // 3) Open Beauty Facts (cosmetics/hygiene)
+  try {
+    const res = await fetch(`https://world.openbeautyfacts.org/api/v2/product/${codigo}.json`);
+    if (res.ok) {
+      const json = await res.json();
+      if (json.status === 1 && json.product) {
+        const p = json.product;
+        const nome = p.product_name || '';
+        if (nome) return { nome, marca: p.brands || '', imagemUrl: p.image_url || p.image_front_url || null };
+      }
+    }
+  } catch { /* continue */ }
+
+  return null;
 }
 
 export default function Cadastro() {
@@ -48,22 +74,35 @@ export default function Cadastro() {
   const [duplicateNome, setDuplicateNome] = useState('');
   const [buscandoAPI, setBuscandoAPI] = useState(false);
 
-  const buscarProdutoExterno = useCallback(async (code: string) => {
+  const resetarFormulario = useCallback(() => {
+    setNome('');
+    setImagemUrl(null);
+    setMarca('');
+    setPrecoCompra('');
+    setPrecoVenda('');
+    setMediaVenda('');
+    setCodigoStatus('idle');
+    setDuplicateNome('');
+  }, []);
+
+  const buscarNaAPI = useCallback(async (code: string) => {
     setBuscandoAPI(true);
     try {
-      const result = await buscarOpenFoodFacts(code);
+      const result = await buscarProdutoExterno(code);
       if (result) {
-        if (result.nome && !nome) setNome(result.nome);
+        if (result.nome) setNome(result.nome);
         if (result.imagemUrl) setImagemUrl(result.imagemUrl);
         if (result.marca) setMarca(result.marca);
         toast.success('Produto encontrado na base externa!');
+      } else {
+        toast.info('Produto não encontrado nas bases externas. Cadastre manualmente.');
       }
     } catch {
       // silently fail
     } finally {
       setBuscandoAPI(false);
     }
-  }, [nome]);
+  }, []);
 
   const verificarCodigo = useCallback(async (code: string) => {
     if (!code.trim()) { setCodigoStatus('idle'); return; }
@@ -76,20 +115,20 @@ export default function Cadastro() {
       } else {
         setCodigoStatus('available');
         setDuplicateNome('');
-        // Search external API
-        buscarProdutoExterno(code.trim());
+        buscarNaAPI(code.trim());
       }
     } catch {
       setCodigoStatus('idle');
     }
-  }, [buscarPorCodigo, buscarProdutoExterno]);
+  }, [buscarPorCodigo, buscarNaAPI]);
 
   const handleScan = useCallback((code: string) => {
     setShowScanner(false);
+    resetarFormulario();
     setCodigo(code);
     toast.success(`Código capturado: ${code}`);
     verificarCodigo(code);
-  }, [verificarCodigo]);
+  }, [verificarCodigo, resetarFormulario]);
 
   const handleCodigoChange = (value: string) => {
     setCodigo(value);
