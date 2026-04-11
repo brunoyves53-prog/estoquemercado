@@ -1,12 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useCadastrarProduto, useProdutoPorCodigo } from '@/hooks/useProdutos';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ScanBarcode, AlertTriangle, CheckCircle2, Package, Loader2 } from 'lucide-react';
+import { ScanBarcode, AlertTriangle, CheckCircle2, Package, Loader2, Camera } from 'lucide-react';
 import BarcodeScanner from '@/components/BarcodeScanner';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface OpenFoodFactsResult {
   nome: string;
@@ -73,7 +74,9 @@ export default function Cadastro() {
   const [codigoStatus, setCodigoStatus] = useState<'idle' | 'checking' | 'available' | 'duplicate'>('idle');
   const [duplicateNome, setDuplicateNome] = useState('');
   const [buscandoAPI, setBuscandoAPI] = useState(false);
-
+  const [produtoNaoEncontrado, setProdutoNaoEncontrado] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const resetarFormulario = useCallback(() => {
     setNome('');
     setImagemUrl(null);
@@ -83,10 +86,12 @@ export default function Cadastro() {
     setMediaVenda('');
     setCodigoStatus('idle');
     setDuplicateNome('');
+    setProdutoNaoEncontrado(false);
   }, []);
 
   const buscarNaAPI = useCallback(async (code: string) => {
     setBuscandoAPI(true);
+    setProdutoNaoEncontrado(false);
     try {
       const result = await buscarProdutoExterno(code);
       if (result) {
@@ -95,12 +100,41 @@ export default function Cadastro() {
         if (result.marca) setMarca(result.marca);
         toast.success('Produto encontrado na base externa!');
       } else {
-        toast.info('Produto não encontrado nas bases externas. Cadastre manualmente.');
+        setProdutoNaoEncontrado(true);
+        toast.info('Produto não encontrado. Tire uma foto ou cadastre manualmente.');
       }
     } catch {
       // silently fail
     } finally {
       setBuscandoAPI(false);
+    }
+  }, []);
+
+  const handlePhotoCapture = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingPhoto(true);
+    try {
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+      const { error: uploadError } = await supabase.storage
+        .from('product-photos')
+        .upload(fileName, file, { contentType: file.type });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-photos')
+        .getPublicUrl(fileName);
+
+      setImagemUrl(publicUrl);
+      setProdutoNaoEncontrado(false);
+      toast.success('Foto capturada com sucesso!');
+    } catch (err: any) {
+      toast.error('Erro ao enviar foto: ' + (err.message || 'Tente novamente'));
+    } finally {
+      setUploadingPhoto(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   }, []);
 
@@ -136,6 +170,7 @@ export default function Cadastro() {
     setDuplicateNome('');
     setImagemUrl(null);
     setMarca('');
+    setProdutoNaoEncontrado(false);
   };
   const handleCodigoBlur = () => { verificarCodigo(codigo); };
 
@@ -153,7 +188,7 @@ export default function Cadastro() {
       });
       toast.success('Produto cadastrado!');
       setNome(''); setCodigo(''); setPrecoCompra(''); setPrecoVenda(''); setMediaVenda('');
-      setImagemUrl(null); setMarca(''); setCodigoStatus('idle');
+      setImagemUrl(null); setMarca(''); setCodigoStatus('idle'); setProdutoNaoEncontrado(false);
     } catch (err: any) {
       if (err.message?.includes('unique') || err.message?.includes('duplicate')) {
         toast.error('Já existe um produto com este nome ou código de barras');
@@ -193,6 +228,37 @@ export default function Cadastro() {
                 {marca && <p className="text-xs text-muted-foreground">{marca}</p>}
               </>
             )}
+          </div>
+        )}
+
+        {/* Photo capture when product not found */}
+        {produtoNaoEncontrado && !imagemUrl && !buscandoAPI && (
+          <div className="stat-card border-accent/30 flex flex-col items-center gap-3 py-5">
+            <Package size={40} className="text-muted-foreground" />
+            <p className="text-sm font-medium text-center">Produto não encontrado nas bases externas</p>
+            <p className="text-xs text-muted-foreground text-center">Tire uma foto do produto para cadastrar com imagem</p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handlePhotoCapture}
+            />
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingPhoto}
+              type="button"
+            >
+              {uploadingPhoto ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Camera size={18} />
+              )}
+              {uploadingPhoto ? 'Enviando...' : 'Tirar Foto do Produto'}
+            </Button>
           </div>
         )}
 
