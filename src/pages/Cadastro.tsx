@@ -86,6 +86,7 @@ export default function Cadastro() {
     setMediaVenda('');
     setCodigoStatus('idle');
     setDuplicateNome('');
+    setProdutoNaoEncontrado(false);
   }, []);
 
   const buscarNaAPI = useCallback(async (code: string) => {
