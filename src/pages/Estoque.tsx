@@ -103,9 +103,9 @@ export default function Estoque() {
                         {p.media_venda_mensal}
                       </TableCell>
                       <TableCell className="hidden sm:table-cell text-sm">
-                        {p.proxima_validade ? (
+                        {validDate ? (
                           <span className={isExpiring ? 'text-destructive font-medium' : 'text-muted-foreground'}>
-                            {format(parseISO(p.proxima_validade), 'dd/MM/yy')}
+                            {format(validDate, 'dd/MM/yy')}
                           </span>
                         ) : (
                           <span className="text-muted-foreground">—</span>
