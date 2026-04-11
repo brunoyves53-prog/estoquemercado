@@ -188,7 +188,7 @@ export default function Cadastro() {
       });
       toast.success('Produto cadastrado!');
       setNome(''); setCodigo(''); setPrecoCompra(''); setPrecoVenda(''); setMediaVenda('');
-      setImagemUrl(null); setMarca(''); setCodigoStatus('idle');
+      setImagemUrl(null); setMarca(''); setCodigoStatus('idle'); setProdutoNaoEncontrado(false);
     } catch (err: any) {
       if (err.message?.includes('unique') || err.message?.includes('duplicate')) {
         toast.error('Já existe um produto com este nome ou código de barras');
