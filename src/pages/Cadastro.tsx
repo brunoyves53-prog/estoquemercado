@@ -4,7 +4,7 @@ import { useCadastrarProduto, useProdutoPorCodigo } from '@/hooks/useProdutos';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ScanBarcode, AlertTriangle, CheckCircle2, Package, Loader2, Camera } from 'lucide-react';
+import { ScanBarcode, AlertTriangle, CheckCircle2, Package, Loader2, Camera, ImagePlus } from 'lucide-react';
 import BarcodeScanner from '@/components/BarcodeScanner';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -76,7 +76,8 @@ export default function Cadastro() {
   const [buscandoAPI, setBuscandoAPI] = useState(false);
   const [produtoNaoEncontrado, setProdutoNaoEncontrado] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const resetarFormulario = useCallback(() => {
     setNome('');
     setImagemUrl(null);
@@ -134,7 +135,8 @@ export default function Cadastro() {
       toast.error('Erro ao enviar foto: ' + (err.message || 'Tente novamente'));
     } finally {
       setUploadingPhoto(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (cameraInputRef.current) cameraInputRef.current.value = '';
+      if (galleryInputRef.current) galleryInputRef.current.value = '';
     }
   }, []);
 
@@ -236,29 +238,44 @@ export default function Cadastro() {
           <div className="stat-card border-accent/30 flex flex-col items-center gap-3 py-5">
             <Package size={40} className="text-muted-foreground" />
             <p className="text-sm font-medium text-center">Produto não encontrado nas bases externas</p>
-            <p className="text-xs text-muted-foreground text-center">Tire uma foto do produto para cadastrar com imagem</p>
+            <p className="text-xs text-muted-foreground text-center">Adicione uma foto do produto</p>
             <input
-              ref={fileInputRef}
+              ref={cameraInputRef}
               type="file"
               accept="image/*"
               capture="environment"
               className="hidden"
               onChange={handlePhotoCapture}
             />
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingPhoto}
-              type="button"
-            >
-              {uploadingPhoto ? (
-                <Loader2 size={18} className="animate-spin" />
-              ) : (
-                <Camera size={18} />
-              )}
-              {uploadingPhoto ? 'Enviando...' : 'Tirar Foto do Produto'}
-            </Button>
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoCapture}
+            />
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => cameraInputRef.current?.click()}
+                disabled={uploadingPhoto}
+                type="button"
+              >
+                {uploadingPhoto ? <Loader2 size={18} className="animate-spin" /> : <Camera size={18} />}
+                Tirar Foto
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => galleryInputRef.current?.click()}
+                disabled={uploadingPhoto}
+                type="button"
+              >
+                {uploadingPhoto ? <Loader2 size={18} className="animate-spin" /> : <ImagePlus size={18} />}
+                Galeria
+              </Button>
+            </div>
           </div>
         )}
 
