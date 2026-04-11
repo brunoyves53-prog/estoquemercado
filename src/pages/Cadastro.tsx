@@ -91,6 +91,7 @@ export default function Cadastro() {
 
   const buscarNaAPI = useCallback(async (code: string) => {
     setBuscandoAPI(true);
+    setProdutoNaoEncontrado(false);
     try {
       const result = await buscarProdutoExterno(code);
       if (result) {
@@ -99,12 +100,41 @@ export default function Cadastro() {
         if (result.marca) setMarca(result.marca);
         toast.success('Produto encontrado na base externa!');
       } else {
-        toast.info('Produto não encontrado nas bases externas. Cadastre manualmente.');
+        setProdutoNaoEncontrado(true);
+        toast.info('Produto não encontrado. Tire uma foto ou cadastre manualmente.');
       }
     } catch {
       // silently fail
     } finally {
       setBuscandoAPI(false);
+    }
+  }, []);
+
+  const handlePhotoCapture = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingPhoto(true);
+    try {
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+      const { error: uploadError } = await supabase.storage
+        .from('product-photos')
+        .upload(fileName, file, { contentType: file.type });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-photos')
+        .getPublicUrl(fileName);
+
+      setImagemUrl(publicUrl);
+      setProdutoNaoEncontrado(false);
+      toast.success('Foto capturada com sucesso!');
+    } catch (err: any) {
+      toast.error('Erro ao enviar foto: ' + (err.message || 'Tente novamente'));
+    } finally {
+      setUploadingPhoto(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   }, []);
 
