@@ -4,16 +4,17 @@ import { Package, AlertTriangle, TrendingDown, Calendar, ShoppingCart, ArrowDown
 import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
+import { calcularAlerta } from '@/lib/alertUtils';
 export default function Dashboard() {
   const { data: produtos = [] } = useProdutos();
   const { data: movimentacoes = [] } = useMovimentacoes();
   const navigate = useNavigate();
 
-  const totalProdutos = produtos.length;
-  const totalEstoque = produtos.reduce((s, p) => s + p.estoque_total, 0);
-  const estoqueBaixo = produtos.filter(p => p.estoque_total < p.media_venda_mensal).length;
-  const vencendo = produtos.filter(p => {
+  const emEstoque = produtos.filter(p => p.estoque_total > 0);
+  const totalProdutos = emEstoque.length;
+  const totalEstoque = emEstoque.reduce((s, p) => s + p.estoque_total, 0);
+  const alertas = emEstoque.filter(p => calcularAlerta(p).level !== 'normal').length;
+  const vencendo = emEstoque.filter(p => {
     if (!p.proxima_validade) return false;
     return differenceInDays(parseISO(p.proxima_validade), new Date()) <= 30;
   }).length;
@@ -47,9 +48,9 @@ export default function Dashboard() {
           <div className="stat-card border-warning/30">
             <div className="flex items-center gap-2 text-warning mb-1">
               <TrendingDown size={16} />
-              <span className="text-xs font-medium">Estoque Baixo</span>
+              <span className="text-xs font-medium">Repor</span>
             </div>
-            <p className="text-3xl font-display font-bold text-warning">{estoqueBaixo}</p>
+            <p className="text-3xl font-display font-bold text-warning">{alertas}</p>
           </div>
           <div className="stat-card border-destructive/30">
             <div className="flex items-center gap-2 text-destructive mb-1">
@@ -77,14 +78,14 @@ export default function Dashboard() {
         </div>
 
         {/* Alerts summary */}
-        {(estoqueBaixo > 0 || vencendo > 0) && (
+        {(alertas > 0 || vencendo > 0) && (
           <button onClick={() => navigate('/alertas')} className="w-full stat-card border-warning/40 flex items-center gap-3">
             <AlertTriangle size={20} className="text-warning shrink-0" />
             <div className="text-left">
               <p className="text-sm font-medium">Atenção necessária</p>
               <p className="text-xs text-muted-foreground">
-                {estoqueBaixo > 0 && `${estoqueBaixo} produto(s) com estoque baixo`}
-                {estoqueBaixo > 0 && vencendo > 0 && ' • '}
+                {alertas > 0 && `${alertas} produto(s) para repor`}
+                {alertas > 0 && vencendo > 0 && ' • '}
                 {vencendo > 0 && `${vencendo} produto(s) vencendo`}
               </p>
             </div>
