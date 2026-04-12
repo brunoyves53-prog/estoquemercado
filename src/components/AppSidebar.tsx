@@ -41,16 +41,18 @@ export default function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarContent>
         <div className="px-4 py-5">
-          {!collapsed && (
-            <h2 className="text-lg font-display font-bold text-foreground tracking-tight">
-              Mercadinho
-            </h2>
-          )}
-          {collapsed && (
-            <div className="flex justify-center">
-              <Package size={24} className="text-primary" />
-            </div>
-          )}
+          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <img 
+              src={logoImage} 
+              alt="Honest Market" 
+              className="h-9 w-auto object-contain" 
+            />
+            {!collapsed && (
+              <span className="text-base font-display font-bold text-foreground tracking-tight">
+                Honest Market
+              </span>
+            )}
+          </Link>
         </div>
         <SidebarGroup>
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
