@@ -15,8 +15,22 @@ interface OpenFoodFactsResult {
   imagemUrl: string | null;
 }
 
-async function buscarProdutoExterno(codigo: string): Promise<OpenFoodFactsResult | null> {
-  // 1) Open Food Facts (world)
+async function buscarCosmos(codigo: string): Promise<OpenFoodFactsResult | null> {
+  try {
+    const res = await supabase.functions.invoke('cosmos-lookup', {
+      body: { barcode: codigo },
+    });
+    if (res.error) return null;
+    const data = res.data;
+    if (data?.found && data.nome) {
+      return { nome: data.nome, marca: data.marca || '', imagemUrl: data.imagemUrl || null };
+    }
+  } catch { /* continue */ }
+  return null;
+}
+
+async function buscarOpenFoodFacts(codigo: string): Promise<OpenFoodFactsResult | null> {
+  // World
   try {
     const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${codigo}.json`);
     if (res.ok) {
@@ -28,8 +42,7 @@ async function buscarProdutoExterno(codigo: string): Promise<OpenFoodFactsResult
       }
     }
   } catch { /* continue */ }
-
-  // 2) Open Food Facts (BR)
+  // BR
   try {
     const res = await fetch(`https://br.openfoodfacts.org/api/v2/product/${codigo}.json`);
     if (res.ok) {
@@ -41,8 +54,7 @@ async function buscarProdutoExterno(codigo: string): Promise<OpenFoodFactsResult
       }
     }
   } catch { /* continue */ }
-
-  // 3) Open Beauty Facts (cosmetics/hygiene)
+  // Open Beauty Facts
   try {
     const res = await fetch(`https://world.openbeautyfacts.org/api/v2/product/${codigo}.json`);
     if (res.ok) {
@@ -54,8 +66,59 @@ async function buscarProdutoExterno(codigo: string): Promise<OpenFoodFactsResult
       }
     }
   } catch { /* continue */ }
+  return null;
+}
+
+async function buscarProdutoExterno(codigo: string): Promise<OpenFoodFactsResult | null> {
+  // 1) Cosmos Bluesoft (priority for Brazil)
+  const cosmos = await buscarCosmos(codigo);
+  if (cosmos) return cosmos;
+
+  // 2) Open Food Facts + Open Beauty Facts
+  const off = await buscarOpenFoodFacts(codigo);
+  if (off) return off;
 
   return null;
+}
+
+async function salvarProdutoAutomaticamente(
+  codigo: string,
+  result: OpenFoodFactsResult
+) {
+  try {
+    const nome = result.nome.trim();
+    if (!nome || !codigo.trim()) return;
+
+    // Check if already exists
+    const { data: existing } = await supabase
+      .from('produtos')
+      .select('id, imagem_url')
+      .eq('codigo_barras', codigo.trim())
+      .maybeSingle();
+
+    if (existing) {
+      // Update empty fields only
+      if (!existing.imagem_url && result.imagemUrl) {
+        await supabase
+          .from('produtos')
+          .update({ imagem_url: result.imagemUrl })
+          .eq('id', existing.id);
+      }
+      return;
+    }
+
+    // Auto-save new product
+    await supabase.from('produtos').insert({
+      nome_produto: nome,
+      codigo_barras: codigo.trim(),
+      imagem_url: result.imagemUrl || null,
+      preco_compra: 0,
+      preco_venda: 0,
+      media_venda_mensal: 0,
+    });
+  } catch {
+    // Silent fail - don't interrupt user flow
+  }
 }
 
 export default function Cadastro() {
@@ -100,6 +163,8 @@ export default function Cadastro() {
         if (result.imagemUrl) setImagemUrl(result.imagemUrl);
         if (result.marca) setMarca(result.marca);
         toast.success('Produto encontrado na base externa!');
+        // Auto-save in background
+        salvarProdutoAutomaticamente(code, result);
       } else {
         setProdutoNaoEncontrado(true);
         toast.info('Produto não encontrado. Tire uma foto ou cadastre manualmente.');
