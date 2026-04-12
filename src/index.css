@@ -162,3 +162,12 @@
     opacity: 0.05;
   }
 }
+
+@keyframes scan-line {
+  0%, 100% { top: 0; }
+  50% { top: calc(100% - 2px); }
+}
+
+.animate-scan-line {
+  animation: scan-line 1.5s ease-in-out infinite;
+}
