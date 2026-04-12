@@ -4,7 +4,9 @@ import { Search, Pencil, PackagePlus, History, Trash2, Package, ChevronDown, Che
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { ProdutoComEstoque } from '@/lib/supabase';
+import { calcularAlerta, AlertLevel } from '@/lib/alertUtils';
 import EditarProdutoDialog from '@/components/EditarProdutoDialog';
 import AjustarEstoqueDialog from '@/components/AjustarEstoqueDialog';
 import HistoricoProdutoDialog from '@/components/HistoricoProdutoDialog';
@@ -13,13 +15,20 @@ import { toast } from 'sonner';
 
 type DialogType = 'editar' | 'ajustar' | 'historico' | 'excluir';
 
+const alertStyles: Record<AlertLevel, string> = {
+  critico: 'bg-destructive text-destructive-foreground',
+  atencao: 'bg-warning text-warning-foreground',
+  normal: '',
+};
+
 function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onAction: (type: DialogType) => void }) {
   const [expanded, setExpanded] = useState(false);
   const parsedDate = produto.proxima_validade ? parseISO(produto.proxima_validade) : null;
   const validDate = parsedDate && isValid(parsedDate) ? parsedDate : null;
   const daysToExpiry = validDate ? differenceInDays(validDate, new Date()) : null;
-  const isLowStock = produto.estoque_total < produto.media_venda_mensal;
   const isExpiring = daysToExpiry !== null && daysToExpiry <= 30;
+
+  const alerta = calcularAlerta(produto);
 
   return (
     <div className="rounded-xl border border-border bg-card p-4 space-y-3">
@@ -43,12 +52,19 @@ function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onActi
           )}
         </div>
         <div className="text-right shrink-0">
-          <p className={`text-lg font-display font-bold ${isLowStock ? 'text-warning' : 'text-foreground'}`}>
+          <p className={`text-lg font-display font-bold ${alerta.level === 'critico' ? 'text-destructive' : alerta.level === 'atencao' ? 'text-warning' : 'text-foreground'}`}>
             {produto.estoque_total}
           </p>
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">un.</p>
         </div>
       </div>
+
+      {/* Alert badge */}
+      {alerta.level !== 'normal' && alerta.label && (
+        <Badge className={`${alertStyles[alerta.level]} text-[10px] font-medium`}>
+          {alerta.label}
+        </Badge>
+      )}
 
       {/* Prices row - always visible */}
       <div className="grid grid-cols-2 gap-2">
@@ -76,6 +92,9 @@ function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onActi
           <div className="bg-muted/50 rounded-lg px-3 py-2">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Média Venda/Mês</p>
             <p className="text-sm font-semibold">{produto.media_venda_mensal} un.</p>
+            {alerta.diasRestantes !== null && alerta.level === 'normal' && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">{alerta.label}</p>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -105,7 +124,10 @@ export default function Estoque() {
   const [dialogType, setDialogType] = useState<DialogType | null>(null);
   const excluir = useExcluirProduto();
 
-  const filtered = produtos.filter(p =>
+  // Only show products with stock > 0
+  const emEstoque = produtos.filter(p => p.estoque_total > 0);
+
+  const filtered = emEstoque.filter(p =>
     p.nome_produto.toLowerCase().includes(search.toLowerCase()) ||
     p.codigo_barras.includes(search)
   );
@@ -124,7 +146,7 @@ export default function Estoque() {
     <div className="page-container">
       <div className="px-6 py-4 border-b border-border">
         <h1 className="text-2xl font-display font-bold">Estoque</h1>
-        <p className="text-xs text-muted-foreground mt-1">{filtered.length} produto{filtered.length !== 1 ? 's' : ''}</p>
+        <p className="text-xs text-muted-foreground mt-1">{filtered.length} produto{filtered.length !== 1 ? 's' : ''} em estoque</p>
       </div>
       <div className="p-6 space-y-4">
         <div className="relative max-w-md">
@@ -140,7 +162,9 @@ export default function Estoque() {
         {isLoading && <p className="text-center text-sm text-muted-foreground py-8">Carregando...</p>}
 
         {!isLoading && filtered.length === 0 && (
-          <p className="text-center text-sm text-muted-foreground py-8">Nenhum produto encontrado</p>
+          <p className="text-center text-sm text-muted-foreground py-8">
+            {search ? 'Nenhum produto encontrado' : 'Nenhum produto em estoque. Registre uma compra para adicionar.'}
+          </p>
         )}
 
         {!isLoading && filtered.length > 0 && (
