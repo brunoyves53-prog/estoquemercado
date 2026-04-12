@@ -27,8 +27,15 @@ export default function Retiradas() {
 
   const handleScan = (code: string) => {
     setShowScanner(false);
+    // Reset previous selection
+    setSelected(null);
+    setQuantidade('');
     const found = produtos.find(p => p.codigo_barras === code);
     if (found) {
+      if (found.estoque_total <= 0) {
+        toast.error('Produto encontrado, mas sem estoque disponível');
+        return;
+      }
       setSelected(found);
       toast.success(`Produto encontrado: ${found.nome_produto}`);
     } else {
