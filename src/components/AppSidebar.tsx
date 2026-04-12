@@ -8,7 +8,8 @@ import {
   History,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
+import logoImage from '@/assets/logo-honest-market.png';
 import {
   Sidebar,
   SidebarContent,
