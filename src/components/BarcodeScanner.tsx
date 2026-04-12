@@ -33,36 +33,41 @@ export default function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps)
     const scanner = new Html5Qrcode(containerRef.current);
     scannerRef.current = scanner;
 
-    const bestId = await findBestRearCamera();
+    const scanConfig = { fps: 10, qrbox: { width: 250, height: 150 } };
+    const onSuccess = (decodedText: string) => {
+      scanner.stop().then(() => stableOnScan.current(decodedText));
+    };
+    const onError = () => {};
 
-    const cameraConfig: any = bestId
-      ? { deviceId: { exact: bestId } }
-      : { facingMode: 'environment' };
-
+    // 1st attempt: force rear camera with exact
     try {
       await scanner.start(
-        cameraConfig,
-        { fps: 10, qrbox: { width: 250, height: 150 } },
-        (decodedText) => {
-          scanner.stop().then(() => stableOnScan.current(decodedText));
-        },
-        () => {}
+        { facingMode: { exact: 'environment' } },
+        scanConfig, onSuccess, onError
       );
+      return;
+    } catch { /* continue to fallback */ }
+
+    // 2nd attempt: find rear camera by device label
+    const fallbackId = await findRearCameraFallback();
+    if (fallbackId) {
+      try {
+        await scanner.start(
+          { deviceId: { exact: fallbackId } },
+          scanConfig, onSuccess, onError
+        );
+        return;
+      } catch { /* continue */ }
+    }
+
+    // 3rd attempt: non-exact environment
+    try {
+      await scanner.start(
+        { facingMode: 'environment' },
+        scanConfig, onSuccess, onError
+      );
+      return;
     } catch (err) {
-      // Fallback if exact device fails
-      if (bestId) {
-        try {
-          await scanner.start(
-            { facingMode: 'environment' },
-            { fps: 10, qrbox: { width: 250, height: 150 } },
-            (decodedText) => {
-              scanner.stop().then(() => stableOnScan.current(decodedText));
-            },
-            () => {}
-          );
-          return;
-        } catch { /* fall through */ }
-      }
       setError('Não foi possível acessar a câmera. Verifique as permissões.');
       console.error(err);
     }
