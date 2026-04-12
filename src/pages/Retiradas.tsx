@@ -1,19 +1,40 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useProdutos, useRegistrarRetirada } from '@/hooks/useProdutos';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Package } from 'lucide-react';
+import { Package, ScanBarcode } from 'lucide-react';
 import ProductAutocomplete from '@/components/ProductAutocomplete';
+import BarcodeScanner from '@/components/BarcodeScanner';
 import { toast } from 'sonner';
 import { ProdutoComEstoque } from '@/lib/supabase';
 
 export default function Retiradas() {
   const { data: produtos = [] } = useProdutos();
   const retirar = useRegistrarRetirada();
+  const [searchParams] = useSearchParams();
 
   const [selected, setSelected] = useState<ProdutoComEstoque | null>(null);
   const [quantidade, setQuantidade] = useState('');
+  const [showScanner, setShowScanner] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('scan') === 'true') {
+      setShowScanner(true);
+    }
+  }, [searchParams]);
+
+  const handleScan = (code: string) => {
+    setShowScanner(false);
+    const found = produtos.find(p => p.codigo_barras === code);
+    if (found) {
+      setSelected(found);
+      toast.success(`Produto encontrado: ${found.nome_produto}`);
+    } else {
+      toast.error('Produto não encontrado no estoque');
+    }
+  };
 
   const handleSubmit = async () => {
     if (!selected || !quantidade) {
@@ -41,7 +62,16 @@ export default function Retiradas() {
         <h1 className="text-2xl font-display font-bold">Registrar Retirada</h1>
       </div>
 
+      {showScanner && (
+        <BarcodeScanner onScan={handleScan} onClose={() => setShowScanner(false)} />
+      )}
+
       <div className="p-6 space-y-4 max-w-2xl">
+        <Button size="xl" className="w-full" variant="outline" onClick={() => setShowScanner(true)}>
+          <ScanBarcode size={24} />
+          Escanear Código de Barras
+        </Button>
+
         <ProductAutocomplete
           produtos={produtos}
           onSelect={setSelected}
