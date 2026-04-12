@@ -163,6 +163,8 @@ export default function Cadastro() {
         if (result.imagemUrl) setImagemUrl(result.imagemUrl);
         if (result.marca) setMarca(result.marca);
         toast.success('Produto encontrado na base externa!');
+        // Auto-save in background
+        salvarProdutoAutomaticamente(code, result);
       } else {
         setProdutoNaoEncontrado(true);
         toast.info('Produto não encontrado. Tire uma foto ou cadastre manualmente.');
