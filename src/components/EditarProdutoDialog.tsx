@@ -7,6 +7,7 @@ import { useAtualizarProduto, useProdutoPorCodigo } from '@/hooks/useProdutos';
 import { ProdutoComEstoque } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { AlertTriangle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Props {
   produto: ProdutoComEstoque;
@@ -23,6 +24,7 @@ export default function EditarProdutoDialog({ produto, open, onOpenChange }: Pro
   const [precoCompra, setPrecoCompra] = useState(String(produto.preco_compra));
   const [precoVenda, setPrecoVenda] = useState(String(produto.preco_venda));
   const [mediaVenda, setMediaVenda] = useState(String(produto.media_venda_mensal));
+  const [cicloReposicao, setCicloReposicao] = useState(String(produto.ciclo_reposicao || 30));
   const [codigoDuplicado, setCodigoDuplicado] = useState(false);
   const [duplicateNome, setDuplicateNome] = useState('');
 
@@ -41,9 +43,7 @@ export default function EditarProdutoDialog({ produto, open, onOpenChange }: Pro
         setCodigoDuplicado(false);
         setDuplicateNome('');
       }
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
   }, [codigo, produto, buscarPorCodigo]);
 
   const handleSave = async () => {
@@ -63,6 +63,7 @@ export default function EditarProdutoDialog({ produto, open, onOpenChange }: Pro
         preco_compra: parseFloat(precoCompra) || 0,
         preco_venda: parseFloat(precoVenda) || 0,
         media_venda_mensal: parseFloat(mediaVenda) || 0,
+        ciclo_reposicao: parseInt(cicloReposicao) || 30,
       });
       toast.success('Produto atualizado!');
       onOpenChange(false);
@@ -108,9 +109,27 @@ export default function EditarProdutoDialog({ produto, open, onOpenChange }: Pro
               <Input type="number" inputMode="decimal" value={precoVenda} onChange={(e) => setPrecoVenda(e.target.value)} />
             </div>
           </div>
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">Média Venda Mensal</Label>
-            <Input type="number" inputMode="numeric" value={mediaVenda} onChange={(e) => setMediaVenda(e.target.value)} />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Média Venda Mensal</Label>
+              <Input type="number" inputMode="numeric" value={mediaVenda} onChange={(e) => setMediaVenda(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Ciclo de Reposição</Label>
+              <Select value={cicloReposicao} onValueChange={setCicloReposicao}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">7 dias</SelectItem>
+                  <SelectItem value="15">15 dias</SelectItem>
+                  <SelectItem value="30">30 dias</SelectItem>
+                  <SelectItem value="45">45 dias</SelectItem>
+                  <SelectItem value="60">60 dias</SelectItem>
+                  <SelectItem value="90">90 dias</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         <DialogFooter>

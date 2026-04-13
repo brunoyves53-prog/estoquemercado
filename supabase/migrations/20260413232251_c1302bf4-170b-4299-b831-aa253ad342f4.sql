@@ -1,0 +1,1 @@
+ALTER TABLE public.produtos ADD COLUMN ciclo_reposicao integer NOT NULL DEFAULT 30;

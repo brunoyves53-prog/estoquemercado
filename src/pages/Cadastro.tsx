@@ -8,6 +8,7 @@ import { ScanBarcode, AlertTriangle, CheckCircle2, Package, Loader2, Camera, Ima
 import BarcodeScanner from '@/components/BarcodeScanner';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface OpenFoodFactsResult {
   nome: string;
@@ -30,7 +31,6 @@ async function buscarCosmos(codigo: string): Promise<OpenFoodFactsResult | null>
 }
 
 async function buscarOpenFoodFacts(codigo: string): Promise<OpenFoodFactsResult | null> {
-  // World
   try {
     const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${codigo}.json`);
     if (res.ok) {
@@ -42,7 +42,6 @@ async function buscarOpenFoodFacts(codigo: string): Promise<OpenFoodFactsResult 
       }
     }
   } catch { /* continue */ }
-  // BR
   try {
     const res = await fetch(`https://br.openfoodfacts.org/api/v2/product/${codigo}.json`);
     if (res.ok) {
@@ -54,7 +53,6 @@ async function buscarOpenFoodFacts(codigo: string): Promise<OpenFoodFactsResult 
       }
     }
   } catch { /* continue */ }
-  // Open Beauty Facts
   try {
     const res = await fetch(`https://world.openbeautyfacts.org/api/v2/product/${codigo}.json`);
     if (res.ok) {
@@ -70,44 +68,28 @@ async function buscarOpenFoodFacts(codigo: string): Promise<OpenFoodFactsResult 
 }
 
 async function buscarProdutoExterno(codigo: string): Promise<OpenFoodFactsResult | null> {
-  // 1) Cosmos Bluesoft (priority for Brazil)
   const cosmos = await buscarCosmos(codigo);
   if (cosmos) return cosmos;
-
-  // 2) Open Food Facts + Open Beauty Facts
   const off = await buscarOpenFoodFacts(codigo);
   if (off) return off;
-
   return null;
 }
 
-async function salvarProdutoAutomaticamente(
-  codigo: string,
-  result: OpenFoodFactsResult
-) {
+async function salvarProdutoAutomaticamente(codigo: string, result: OpenFoodFactsResult) {
   try {
     const nome = result.nome.trim();
     if (!nome || !codigo.trim()) return;
-
-    // Check if already exists
     const { data: existing } = await supabase
       .from('produtos')
       .select('id, imagem_url')
       .eq('codigo_barras', codigo.trim())
       .maybeSingle();
-
     if (existing) {
-      // Update empty fields only
       if (!existing.imagem_url && result.imagemUrl) {
-        await supabase
-          .from('produtos')
-          .update({ imagem_url: result.imagemUrl })
-          .eq('id', existing.id);
+        await supabase.from('produtos').update({ imagem_url: result.imagemUrl }).eq('id', existing.id);
       }
       return;
     }
-
-    // Auto-save new product
     await supabase.from('produtos').insert({
       nome_produto: nome,
       codigo_barras: codigo.trim(),
@@ -116,9 +98,7 @@ async function salvarProdutoAutomaticamente(
       preco_venda: 0,
       media_venda_mensal: 0,
     });
-  } catch {
-    // Silent fail - don't interrupt user flow
-  }
+  } catch { /* Silent */ }
 }
 
 export default function Cadastro() {
@@ -131,6 +111,7 @@ export default function Cadastro() {
   const [precoCompra, setPrecoCompra] = useState('');
   const [precoVenda, setPrecoVenda] = useState('');
   const [mediaVenda, setMediaVenda] = useState('');
+  const [cicloReposicao, setCicloReposicao] = useState('30');
   const [imagemUrl, setImagemUrl] = useState<string | null>(null);
   const [marca, setMarca] = useState('');
   const [showScanner, setShowScanner] = useState(false);
@@ -141,6 +122,7 @@ export default function Cadastro() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+
   const resetarFormulario = useCallback(() => {
     setNome('');
     setImagemUrl(null);
@@ -148,6 +130,7 @@ export default function Cadastro() {
     setPrecoCompra('');
     setPrecoVenda('');
     setMediaVenda('');
+    setCicloReposicao('30');
     setCodigoStatus('idle');
     setDuplicateNome('');
     setProdutoNaoEncontrado(false);
@@ -163,15 +146,12 @@ export default function Cadastro() {
         if (result.imagemUrl) setImagemUrl(result.imagemUrl);
         if (result.marca) setMarca(result.marca);
         toast.success('Produto encontrado na base externa!');
-        // Auto-save in background
         salvarProdutoAutomaticamente(code, result);
       } else {
         setProdutoNaoEncontrado(true);
         toast.info('Produto não encontrado. Tire uma foto ou cadastre manualmente.');
       }
-    } catch {
-      // silently fail
-    } finally {
+    } catch { /* silently fail */ } finally {
       setBuscandoAPI(false);
     }
   }, []);
@@ -179,20 +159,14 @@ export default function Cadastro() {
   const handlePhotoCapture = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setUploadingPhoto(true);
     try {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
       const { error: uploadError } = await supabase.storage
         .from('product-photos')
         .upload(fileName, file, { contentType: file.type });
-
       if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('product-photos')
-        .getPublicUrl(fileName);
-
+      const { data: { publicUrl } } = supabase.storage.from('product-photos').getPublicUrl(fileName);
       setImagemUrl(publicUrl);
       setProdutoNaoEncontrado(false);
       toast.success('Foto capturada com sucesso!');
@@ -251,11 +225,12 @@ export default function Cadastro() {
         preco_compra: parseFloat(precoCompra) || 0,
         preco_venda: parseFloat(precoVenda) || 0,
         media_venda_mensal: parseFloat(mediaVenda) || 0,
+        ciclo_reposicao: parseInt(cicloReposicao) || 30,
         imagem_url: imagemUrl || null,
       });
       toast.success('Produto cadastrado!');
       setNome(''); setCodigo(''); setPrecoCompra(''); setPrecoVenda(''); setMediaVenda('');
-      setImagemUrl(null); setMarca(''); setCodigoStatus('idle'); setProdutoNaoEncontrado(false);
+      setCicloReposicao('30'); setImagemUrl(null); setMarca(''); setCodigoStatus('idle'); setProdutoNaoEncontrado(false);
     } catch (err: any) {
       if (err.message?.includes('unique') || err.message?.includes('duplicate')) {
         toast.error('Já existe um produto com este nome ou código de barras');
@@ -274,7 +249,6 @@ export default function Cadastro() {
       )}
 
       <div className="p-6 space-y-4 max-w-2xl">
-        {/* Product preview from API */}
         {(imagemUrl || buscandoAPI) && (
           <div className="stat-card border-primary/30 flex flex-col items-center gap-3 py-5">
             {buscandoAPI ? (
@@ -298,45 +272,19 @@ export default function Cadastro() {
           </div>
         )}
 
-        {/* Photo capture when product not found */}
         {produtoNaoEncontrado && !imagemUrl && !buscandoAPI && (
           <div className="stat-card border-accent/30 flex flex-col items-center gap-3 py-5">
             <Package size={40} className="text-muted-foreground" />
             <p className="text-sm font-medium text-center">Produto não encontrado nas bases externas</p>
             <p className="text-xs text-muted-foreground text-center">Adicione uma foto do produto</p>
-            <input
-              ref={cameraInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={handlePhotoCapture}
-            />
-            <input
-              ref={galleryInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handlePhotoCapture}
-            />
+            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoCapture} />
+            <input ref={galleryInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoCapture} />
             <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="gap-2"
-                onClick={() => cameraInputRef.current?.click()}
-                disabled={uploadingPhoto}
-                type="button"
-              >
+              <Button variant="outline" className="gap-2" onClick={() => cameraInputRef.current?.click()} disabled={uploadingPhoto} type="button">
                 {uploadingPhoto ? <Loader2 size={18} className="animate-spin" /> : <Camera size={18} />}
                 Tirar Foto
               </Button>
-              <Button
-                variant="outline"
-                className="gap-2"
-                onClick={() => galleryInputRef.current?.click()}
-                disabled={uploadingPhoto}
-                type="button"
-              >
+              <Button variant="outline" className="gap-2" onClick={() => galleryInputRef.current?.click()} disabled={uploadingPhoto} type="button">
                 {uploadingPhoto ? <Loader2 size={18} className="animate-spin" /> : <ImagePlus size={18} />}
                 Galeria
               </Button>
@@ -363,7 +311,6 @@ export default function Cadastro() {
               <ScanBarcode size={20} />
             </Button>
           </div>
-
           {codigoStatus === 'duplicate' && (
             <div className="mt-2 flex items-start gap-2 rounded-lg bg-destructive/10 border border-destructive/30 p-3">
               <AlertTriangle size={16} className="text-destructive shrink-0 mt-0.5" />
@@ -395,10 +342,30 @@ export default function Cadastro() {
             <Input type="number" inputMode="decimal" placeholder="0.00" value={precoVenda} onChange={(e) => setPrecoVenda(e.target.value)} />
           </div>
         </div>
-        <div>
-          <Label className="text-xs text-muted-foreground mb-1 block">Média de Venda Mensal</Label>
-          <Input type="number" inputMode="numeric" placeholder="Ex: 30" value={mediaVenda} onChange={(e) => setMediaVenda(e.target.value)} />
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">Média de Venda Mensal</Label>
+            <Input type="number" inputMode="numeric" placeholder="Ex: 30" value={mediaVenda} onChange={(e) => setMediaVenda(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">Ciclo de Reposição</Label>
+            <Select value={cicloReposicao} onValueChange={setCicloReposicao}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">7 dias</SelectItem>
+                <SelectItem value="15">15 dias</SelectItem>
+                <SelectItem value="30">30 dias</SelectItem>
+                <SelectItem value="45">45 dias</SelectItem>
+                <SelectItem value="60">60 dias</SelectItem>
+                <SelectItem value="90">90 dias</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+
         <Button size="xl" className="w-full" onClick={handleSubmit} disabled={cadastrar.isPending || codigoStatus === 'duplicate'}>
           {cadastrar.isPending ? 'Cadastrando...' : 'Cadastrar Produto'}
         </Button>

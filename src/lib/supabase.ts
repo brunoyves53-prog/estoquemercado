@@ -8,6 +8,7 @@ export type Produto = {
   preco_compra: number;
   preco_venda: number;
   media_venda_mensal: number;
+  ciclo_reposicao: number;
   imagem_url: string | null;
   created_at: string;
 };
@@ -33,4 +34,5 @@ export type Movimentacao = {
 export type ProdutoComEstoque = Produto & {
   estoque_total: number;
   proxima_validade: string | null;
+  lotes: Lote[];
 };

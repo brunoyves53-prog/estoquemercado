@@ -9,7 +9,8 @@ export interface ProdutoAlert {
 }
 
 export function calcularAlerta(produto: ProdutoComEstoque): ProdutoAlert {
-  const { estoque_total, media_venda_mensal } = produto;
+  const { estoque_total, media_venda_mensal, ciclo_reposicao } = produto;
+  const ciclo = ciclo_reposicao || 30;
 
   if (estoque_total <= 0) {
     return { level: 'critico', diasRestantes: 0, label: 'Sem estoque' };
@@ -20,11 +21,17 @@ export function calcularAlerta(produto: ProdutoComEstoque): ProdutoAlert {
     const consumoDiario = media_venda_mensal / 30;
     const diasRestantes = Math.round(estoque_total / consumoDiario);
 
-    if (diasRestantes <= 3) {
-      return { level: 'critico', diasRestantes, label: `Acaba em ${diasRestantes}d` };
+    // Alert thresholds based on replenishment cycle
+    // Critical: stock won't last until next cycle
+    // Attention: stock will barely cover the next cycle
+    const limiarCritico = Math.max(3, Math.round(ciclo * 0.3));
+    const limiarAtencao = Math.max(7, Math.round(ciclo * 0.7));
+
+    if (diasRestantes <= limiarCritico) {
+      return { level: 'critico', diasRestantes, label: `Acaba em ${diasRestantes}d (ciclo ${ciclo}d)` };
     }
-    if (diasRestantes <= 7) {
-      return { level: 'atencao', diasRestantes, label: `Acaba em ${diasRestantes}d` };
+    if (diasRestantes <= limiarAtencao) {
+      return { level: 'atencao', diasRestantes, label: `Acaba em ${diasRestantes}d (ciclo ${ciclo}d)` };
     }
     return { level: 'normal', diasRestantes, label: `~${diasRestantes}d restantes` };
   }

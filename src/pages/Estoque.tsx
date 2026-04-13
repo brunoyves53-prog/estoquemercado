@@ -1,11 +1,11 @@
-import { useProdutos, useExcluirProduto } from '@/hooks/useProdutos';
+import { useProdutos, useExcluirProduto, useLotes } from '@/hooks/useProdutos';
 import { format, parseISO, differenceInDays, isValid } from 'date-fns';
-import { Search, Pencil, PackagePlus, History, Trash2, Package, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Pencil, PackagePlus, History, Trash2, Package, ChevronDown, ChevronUp, Layers } from 'lucide-react';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ProdutoComEstoque } from '@/lib/supabase';
+import { ProdutoComEstoque, Lote } from '@/lib/supabase';
 import { calcularAlerta, AlertLevel } from '@/lib/alertUtils';
 import EditarProdutoDialog from '@/components/EditarProdutoDialog';
 import AjustarEstoqueDialog from '@/components/AjustarEstoqueDialog';
@@ -21,18 +21,47 @@ const alertStyles: Record<AlertLevel, string> = {
   normal: '',
 };
 
+function LoteCard({ lote }: { lote: Lote }) {
+  const parsedDate = lote.data_validade ? parseISO(lote.data_validade) : null;
+  const validDate = parsedDate && isValid(parsedDate) ? parsedDate : null;
+  const daysToExpiry = validDate ? differenceInDays(validDate, new Date()) : null;
+  const isExpired = daysToExpiry !== null && daysToExpiry < 0;
+  const isExpiring = daysToExpiry !== null && daysToExpiry <= 30 && daysToExpiry >= 0;
+
+  return (
+    <div className={`flex items-center justify-between rounded-lg px-3 py-2 text-xs border ${isExpired ? 'border-destructive/40 bg-destructive/5' : isExpiring ? 'border-warning/40 bg-warning/5' : 'border-border bg-muted/30'}`}>
+      <div className="flex items-center gap-2">
+        <Layers size={12} className="text-muted-foreground" />
+        <span className="font-medium">{lote.quantidade_lote} un.</span>
+      </div>
+      <div className="text-right">
+        {validDate ? (
+          <span className={isExpired ? 'text-destructive font-medium' : isExpiring ? 'text-warning font-medium' : 'text-muted-foreground'}>
+            {isExpired ? 'Vencido' : `Val: ${format(validDate, 'dd/MM/yy')}`}
+            {daysToExpiry !== null && !isExpired && daysToExpiry <= 30 && ` (${daysToExpiry}d)`}
+          </span>
+        ) : (
+          <span className="text-muted-foreground">Sem validade</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onAction: (type: DialogType) => void }) {
   const [expanded, setExpanded] = useState(false);
+  const [showLotes, setShowLotes] = useState(false);
   const parsedDate = produto.proxima_validade ? parseISO(produto.proxima_validade) : null;
   const validDate = parsedDate && isValid(parsedDate) ? parsedDate : null;
   const daysToExpiry = validDate ? differenceInDays(validDate, new Date()) : null;
   const isExpiring = daysToExpiry !== null && daysToExpiry <= 30;
 
   const alerta = calcularAlerta(produto);
+  const lotes = produto.lotes || [];
 
   return (
     <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-      {/* Header: image + name + stock */}
+      {/* Header */}
       <div className="flex items-start gap-3">
         <div className="h-14 w-14 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border/50">
           {produto.imagem_url ? (
@@ -59,14 +88,34 @@ function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onActi
         </div>
       </div>
 
-      {/* Alert badge */}
-      {alerta.level !== 'normal' && alerta.label && (
-        <Badge className={`${alertStyles[alerta.level]} text-[10px] font-medium`}>
-          {alerta.label}
+      {/* Alert + cycle badge */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {alerta.level !== 'normal' && alerta.label && (
+          <Badge className={`${alertStyles[alerta.level]} text-[10px] font-medium`}>
+            {alerta.label}
+          </Badge>
+        )}
+        <Badge variant="outline" className="text-[10px]">
+          Ciclo: {produto.ciclo_reposicao || 30}d
         </Badge>
+        {lotes.length > 0 && (
+          <Badge variant="secondary" className="text-[10px] cursor-pointer" onClick={() => setShowLotes(!showLotes)}>
+            <Layers size={10} className="mr-1" />
+            {lotes.length} lote{lotes.length !== 1 ? 's' : ''}
+          </Badge>
+        )}
+      </div>
+
+      {/* Lotes detail */}
+      {showLotes && lotes.length > 0 && (
+        <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+          {lotes.map(l => (
+            <LoteCard key={l.id} lote={l} />
+          ))}
+        </div>
       )}
 
-      {/* Prices row - always visible */}
+      {/* Prices */}
       <div className="grid grid-cols-2 gap-2">
         <div className="bg-muted/50 rounded-lg px-3 py-2">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Compra</p>
@@ -78,7 +127,7 @@ function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onActi
         </div>
       </div>
 
-      {/* Expandable: média mensal + actions */}
+      {/* Expandable actions */}
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
@@ -124,7 +173,6 @@ export default function Estoque() {
   const [dialogType, setDialogType] = useState<DialogType | null>(null);
   const excluir = useExcluirProduto();
 
-  // Only show products with stock > 0
   const emEstoque = produtos.filter(p => p.estoque_total > 0);
 
   const filtered = emEstoque.filter(p =>

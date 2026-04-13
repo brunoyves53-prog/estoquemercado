@@ -21,7 +21,7 @@ export function useProdutos() {
         const prodLotes = (lotes || []).filter((l: Lote) => l.produto_id === p.id);
         const estoque_total = prodLotes.reduce((sum: number, l: Lote) => sum + l.quantidade_lote, 0);
         const proxima_validade = prodLotes.find((l: Lote) => l.data_validade)?.data_validade || null;
-        return { ...p, estoque_total, proxima_validade };
+        return { ...p, estoque_total, proxima_validade, lotes: prodLotes };
       });
     },
   });
