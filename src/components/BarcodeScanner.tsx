@@ -22,6 +22,45 @@ async function findRearCameraFallback(): Promise<string | null> {
   }
 }
 
+/** Apply continuous autofocus and zoom=1 to the running video track */
+async function applyFocusConstraints(scanner: Html5Qrcode) {
+  try {
+    // Access the internal video element to get the active track
+    const videoElem = document.querySelector(`#${CSS.escape(scanner.getRunningTrackSettings ? '' : '')}`) as HTMLVideoElement | null;
+    // Html5Qrcode exposes getRunningTrackSettings but not the track itself,
+    // so we grab it from the video element inside the container
+    const container = scanner.getState ? document.querySelector('video') : document.querySelector('video');
+    if (!container) return;
+
+    const stream = (container as HTMLVideoElement).srcObject as MediaStream | null;
+    if (!stream) return;
+
+    const track = stream.getVideoTracks()[0];
+    if (!track) return;
+
+    const capabilities = track.getCapabilities?.() as any;
+    const constraints: any = {};
+
+    // Enable continuous autofocus if supported
+    if (capabilities?.focusMode?.includes?.('continuous')) {
+      constraints.focusMode = 'continuous';
+    }
+
+    // Lock zoom to 1x to avoid ultra-wide
+    if (capabilities?.zoom) {
+      const targetZoom = Math.max(capabilities.zoom.min, 1);
+      constraints.zoom = Math.min(targetZoom, capabilities.zoom.max);
+    }
+
+    if (Object.keys(constraints).length > 0) {
+      await track.applyConstraints({ advanced: [constraints] } as any);
+      console.log('Camera constraints applied:', constraints);
+    }
+  } catch (e) {
+    console.warn('Could not apply focus constraints:', e);
+  }
+}
+
 export default function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
   const [error, setError] = useState<string | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
@@ -39,38 +78,28 @@ export default function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps)
     };
     const onError = () => {};
 
+    const tryStart = async (cameraIdOrConfig: any): Promise<boolean> => {
+      try {
+        await scanner.start(cameraIdOrConfig, scanConfig, onSuccess, onError);
+        // After scanner starts, apply focus & zoom constraints
+        await applyFocusConstraints(scanner);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
     // 1st attempt: force rear camera with exact
-    try {
-      await scanner.start(
-        { facingMode: { exact: 'environment' } },
-        scanConfig, onSuccess, onError
-      );
-      return;
-    } catch { /* continue to fallback */ }
+    if (await tryStart({ facingMode: { exact: 'environment' } })) return;
 
     // 2nd attempt: find rear camera by device label
     const fallbackId = await findRearCameraFallback();
-    if (fallbackId) {
-      try {
-        await scanner.start(
-          { deviceId: { exact: fallbackId } },
-          scanConfig, onSuccess, onError
-        );
-        return;
-      } catch { /* continue */ }
-    }
+    if (fallbackId && await tryStart({ deviceId: { exact: fallbackId } })) return;
 
     // 3rd attempt: non-exact environment
-    try {
-      await scanner.start(
-        { facingMode: 'environment' },
-        scanConfig, onSuccess, onError
-      );
-      return;
-    } catch (err) {
-      setError('Não foi possível acessar a câmera. Verifique as permissões.');
-      console.error(err);
-    }
+    if (await tryStart({ facingMode: 'environment' })) return;
+
+    setError('Não foi possível acessar a câmera. Verifique as permissões.');
   }, []);
 
   useEffect(() => {
