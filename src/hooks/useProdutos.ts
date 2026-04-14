@@ -17,11 +17,11 @@ export function useProdutos() {
         .gt('quantidade_lote', 0)
         .order('data_validade', { ascending: true });
 
-      return (produtos || []).map((p: Produto) => {
-        const prodLotes = (lotes || []).filter((l: Lote) => l.produto_id === p.id);
-        const estoque_total = prodLotes.reduce((sum: number, l: Lote) => sum + l.quantidade_lote, 0);
-        const proxima_validade = prodLotes.find((l: Lote) => l.data_validade)?.data_validade || null;
-        return { ...p, estoque_total, proxima_validade, lotes: prodLotes };
+      return (produtos || []).map((p: any) => {
+        const prodLotes = (lotes || []).filter((l: any) => l.produto_id === p.id);
+        const estoque_total = prodLotes.reduce((sum: number, l: any) => sum + l.quantidade_lote, 0);
+        const proxima_validade = prodLotes.find((l: any) => l.data_validade)?.data_validade || null;
+        return { ...p, estoque_total, proxima_validade, lotes: prodLotes } as ProdutoComEstoque;
       });
     },
   });
@@ -59,7 +59,7 @@ export function useCadastrarProduto() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (produto: Omit<Produto, 'id' | 'created_at'> & { imagem_url?: string | null }) => {
-      const { data, error } = await supabase.from('produtos').insert(produto).select().single();
+      const { data, error } = await supabase.from('produtos').insert(produto as any).select().single();
       if (error) throw error;
       return data;
     },
@@ -71,7 +71,6 @@ export function useExcluirProduto() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (produtoId: string) => {
-      // Delete movimentacoes, then lotes, then produto
       await supabase.from('movimentacoes').delete().eq('produto_id', produtoId);
       await supabase.from('lotes').delete().eq('produto_id', produtoId);
       const { error } = await supabase.from('produtos').delete().eq('id', produtoId);
@@ -88,14 +87,15 @@ export function useExcluirProduto() {
 export function useRegistrarCompra() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (params: { produto_id: string; quantidade: number; data_validade: string | null }) => {
+    mutationFn: async (params: { produto_id: string; quantidade: number; data_validade: string | null; ciclo_reposicao: number }) => {
       const { data: lote, error: loteErr } = await supabase
         .from('lotes')
         .insert({
           produto_id: params.produto_id,
           quantidade_lote: params.quantidade,
           data_validade: params.data_validade,
-        })
+          ciclo_reposicao: params.ciclo_reposicao,
+        } as any)
         .select()
         .single();
       if (loteErr) throw loteErr;
@@ -121,7 +121,6 @@ export function useRegistrarRetirada() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (params: { produto_id: string; quantidade: number }) => {
-      // FEFO: get lotes ordered by closest expiry
       const { data: lotes, error: lotesErr } = await supabase
         .from('lotes')
         .select('*')
@@ -178,7 +177,7 @@ export function useAtualizarProduto() {
   return useMutation({
     mutationFn: async (params: { id: string } & Partial<Omit<Produto, 'id' | 'created_at'>>) => {
       const { id, ...updates } = params;
-      const { data, error } = await supabase.from('produtos').update(updates).eq('id', id).select().single();
+      const { data, error } = await supabase.from('produtos').update(updates as any).eq('id', id).select().single();
       if (error) throw error;
       return data;
     },
@@ -191,10 +190,9 @@ export function useAjustarEstoque() {
   return useMutation({
     mutationFn: async (params: { produto_id: string; quantidade: number; tipo_ajuste: 'entrada' | 'saida' }) => {
       if (params.tipo_ajuste === 'entrada') {
-        // Create a new lote for the entry
         const { data: lote, error: loteErr } = await supabase
           .from('lotes')
-          .insert({ produto_id: params.produto_id, quantidade_lote: params.quantidade })
+          .insert({ produto_id: params.produto_id, quantidade_lote: params.quantidade } as any)
           .select()
           .single();
         if (loteErr) throw loteErr;
@@ -207,7 +205,6 @@ export function useAjustarEstoque() {
         });
         if (movErr) throw movErr;
       } else {
-        // FEFO withdrawal for adjustment
         const { data: lotes, error: lotesErr } = await supabase
           .from('lotes')
           .select('*')

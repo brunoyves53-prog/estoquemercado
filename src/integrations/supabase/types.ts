@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       lotes: {
         Row: {
+          ciclo_reposicao: number
           created_at: string
           data_compra: string
           data_validade: string | null
@@ -24,6 +25,7 @@ export type Database = {
           quantidade_lote: number
         }
         Insert: {
+          ciclo_reposicao?: number
           created_at?: string
           data_compra?: string
           data_validade?: string | null
@@ -32,6 +34,7 @@ export type Database = {
           quantidade_lote?: number
         }
         Update: {
+          ciclo_reposicao?: number
           created_at?: string
           data_compra?: string
           data_validade?: string | null
@@ -93,7 +96,6 @@ export type Database = {
       }
       produtos: {
         Row: {
-          ciclo_reposicao: number
           codigo_barras: string
           created_at: string
           id: string
@@ -104,7 +106,6 @@ export type Database = {
           preco_venda: number
         }
         Insert: {
-          ciclo_reposicao?: number
           codigo_barras: string
           created_at?: string
           id?: string
@@ -115,7 +116,6 @@ export type Database = {
           preco_venda?: number
         }
         Update: {
-          ciclo_reposicao?: number
           codigo_barras?: string
           created_at?: string
           id?: string

@@ -8,7 +8,6 @@ import { ScanBarcode, AlertTriangle, CheckCircle2, Package, Loader2, Camera, Ima
 import BarcodeScanner from '@/components/BarcodeScanner';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface OpenFoodFactsResult {
   nome: string;
@@ -110,8 +109,6 @@ export default function Cadastro() {
   const [codigo, setCodigo] = useState(searchParams.get('codigo') || '');
   const [precoCompra, setPrecoCompra] = useState('');
   const [precoVenda, setPrecoVenda] = useState('');
-  const [mediaVenda, setMediaVenda] = useState('');
-  const [cicloReposicao, setCicloReposicao] = useState('30');
   const [imagemUrl, setImagemUrl] = useState<string | null>(null);
   const [marca, setMarca] = useState('');
   const [showScanner, setShowScanner] = useState(false);
@@ -129,8 +126,6 @@ export default function Cadastro() {
     setMarca('');
     setPrecoCompra('');
     setPrecoVenda('');
-    setMediaVenda('');
-    setCicloReposicao('30');
     setCodigoStatus('idle');
     setDuplicateNome('');
     setProdutoNaoEncontrado(false);
@@ -224,13 +219,12 @@ export default function Cadastro() {
         codigo_barras: codigo.trim(),
         preco_compra: parseFloat(precoCompra) || 0,
         preco_venda: parseFloat(precoVenda) || 0,
-        media_venda_mensal: parseFloat(mediaVenda) || 0,
-        ciclo_reposicao: parseInt(cicloReposicao) || 30,
+        media_venda_mensal: 0,
         imagem_url: imagemUrl || null,
       });
       toast.success('Produto cadastrado!');
-      setNome(''); setCodigo(''); setPrecoCompra(''); setPrecoVenda(''); setMediaVenda('');
-      setCicloReposicao('30'); setImagemUrl(null); setMarca(''); setCodigoStatus('idle'); setProdutoNaoEncontrado(false);
+      setNome(''); setCodigo(''); setPrecoCompra(''); setPrecoVenda('');
+      setImagemUrl(null); setMarca(''); setCodigoStatus('idle'); setProdutoNaoEncontrado(false);
     } catch (err: any) {
       if (err.message?.includes('unique') || err.message?.includes('duplicate')) {
         toast.error('Já existe um produto com este nome ou código de barras');
@@ -242,6 +236,7 @@ export default function Cadastro() {
     <div className="page-container">
       <div className="px-6 py-4 border-b border-border">
         <h1 className="text-2xl font-display font-bold">Cadastrar Produto</h1>
+        <p className="text-xs text-muted-foreground mt-1">Cadastro base — sem estoque. Use Compras para dar entrada.</p>
       </div>
 
       {showScanner && (
@@ -340,29 +335,6 @@ export default function Cadastro() {
           <div>
             <Label className="text-xs text-muted-foreground mb-1 block">Preço de Venda</Label>
             <Input type="number" inputMode="decimal" placeholder="0.00" value={precoVenda} onChange={(e) => setPrecoVenda(e.target.value)} />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">Média de Venda Mensal</Label>
-            <Input type="number" inputMode="numeric" placeholder="Ex: 30" value={mediaVenda} onChange={(e) => setMediaVenda(e.target.value)} />
-          </div>
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">Ciclo de Reposição</Label>
-            <Select value={cicloReposicao} onValueChange={setCicloReposicao}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">7 dias</SelectItem>
-                <SelectItem value="15">15 dias</SelectItem>
-                <SelectItem value="30">30 dias</SelectItem>
-                <SelectItem value="45">45 dias</SelectItem>
-                <SelectItem value="60">60 dias</SelectItem>
-                <SelectItem value="90">90 dias</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
 

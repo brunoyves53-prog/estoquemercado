@@ -1,4 +1,4 @@
-import { useProdutos, useExcluirProduto, useLotes } from '@/hooks/useProdutos';
+import { useProdutos, useExcluirProduto } from '@/hooks/useProdutos';
 import { format, parseISO, differenceInDays, isValid } from 'date-fns';
 import { Search, Pencil, PackagePlus, History, Trash2, Package, ChevronDown, ChevronUp, Layers } from 'lucide-react';
 import { useState } from 'react';
@@ -33,6 +33,9 @@ function LoteCard({ lote }: { lote: Lote }) {
       <div className="flex items-center gap-2">
         <Layers size={12} className="text-muted-foreground" />
         <span className="font-medium">{lote.quantidade_lote} un.</span>
+        <Badge variant="outline" className="text-[9px] px-1.5 py-0">
+          Ciclo: {lote.ciclo_reposicao}d
+        </Badge>
       </div>
       <div className="text-right">
         {validDate ? (
@@ -61,7 +64,6 @@ function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onActi
 
   return (
     <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-      {/* Header */}
       <div className="flex items-start gap-3">
         <div className="h-14 w-14 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border/50">
           {produto.imagem_url ? (
@@ -88,16 +90,12 @@ function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onActi
         </div>
       </div>
 
-      {/* Alert + cycle badge */}
       <div className="flex items-center gap-2 flex-wrap">
         {alerta.level !== 'normal' && alerta.label && (
           <Badge className={`${alertStyles[alerta.level]} text-[10px] font-medium`}>
             {alerta.label}
           </Badge>
         )}
-        <Badge variant="outline" className="text-[10px]">
-          Ciclo: {produto.ciclo_reposicao || 30}d
-        </Badge>
         {lotes.length > 0 && (
           <Badge variant="secondary" className="text-[10px] cursor-pointer" onClick={() => setShowLotes(!showLotes)}>
             <Layers size={10} className="mr-1" />
@@ -106,7 +104,6 @@ function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onActi
         )}
       </div>
 
-      {/* Lotes detail */}
       {showLotes && lotes.length > 0 && (
         <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
           {lotes.map(l => (
@@ -115,7 +112,6 @@ function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onActi
         </div>
       )}
 
-      {/* Prices */}
       <div className="grid grid-cols-2 gap-2">
         <div className="bg-muted/50 rounded-lg px-3 py-2">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Compra</p>
@@ -127,7 +123,6 @@ function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onActi
         </div>
       </div>
 
-      {/* Expandable actions */}
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
