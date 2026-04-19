@@ -219,8 +219,9 @@ export default function Cadastro() {
   const handleSubmit = async () => {
     if (!nome || !codigo) { toast.error('Nome e código de barras são obrigatórios'); return; }
     if (codigoStatus === 'duplicate') { toast.error('Este código de barras já está cadastrado.'); return; }
+    const qtdInicial = parseInt(quantidadeInicial) || 0;
     try {
-      await cadastrar.mutateAsync({
+      const novoProduto = await cadastrar.mutateAsync({
         nome_produto: nome.trim(),
         codigo_barras: codigo.trim(),
         preco_compra: parseFloat(precoCompra) || 0,
@@ -228,8 +229,21 @@ export default function Cadastro() {
         media_venda_mensal: 0,
         imagem_url: imagemUrl || null,
       });
-      toast.success('Produto cadastrado!');
+
+      if (qtdInicial > 0 && novoProduto?.id) {
+        await registrarCompra.mutateAsync({
+          produto_id: novoProduto.id,
+          quantidade: qtdInicial,
+          data_validade: validadeInicial || null,
+          ciclo_reposicao: parseInt(cicloReposicao) || 30,
+        });
+        toast.success(`Produto cadastrado com ${qtdInicial} un. em estoque!`);
+      } else {
+        toast.success('Produto cadastrado!');
+      }
+
       setNome(''); setCodigo(''); setPrecoCompra(''); setPrecoVenda('');
+      setQuantidadeInicial(''); setValidadeInicial(''); setCicloReposicao('30');
       setImagemUrl(null); setMarca(''); setCodigoStatus('idle'); setProdutoNaoEncontrado(false);
     } catch (err: any) {
       if (err.message?.includes('unique') || err.message?.includes('duplicate')) {
@@ -242,7 +256,7 @@ export default function Cadastro() {
     <div className="page-container">
       <div className="px-6 py-4 border-b border-border">
         <h1 className="text-2xl font-display font-bold">Cadastrar Produto</h1>
-        <p className="text-xs text-muted-foreground mt-1">Cadastro base — sem estoque. Use Compras para dar entrada.</p>
+        <p className="text-xs text-muted-foreground mt-1">Cadastre o produto e dê entrada no estoque em uma única etapa.</p>
       </div>
 
       {showScanner && (
