@@ -74,19 +74,46 @@ function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onActi
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm truncate">{produto.nome_produto}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="font-semibold text-sm truncate flex-1">{produto.nome_produto}</p>
+            <button
+              onClick={() => onAction('editar')}
+              className="text-muted-foreground hover:text-primary transition-colors shrink-0"
+              aria-label="Editar nome"
+            >
+              <Pencil size={12} />
+            </button>
+          </div>
           <p className="text-xs text-muted-foreground font-mono">{produto.codigo_barras}</p>
-          {validDate && (
-            <p className={`text-xs mt-0.5 ${isExpiring ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
-              Val: {format(validDate, 'dd/MM/yy')}
-              {isExpiring && ` (${daysToExpiry}d)`}
-            </p>
-          )}
+          <div className="flex items-center gap-1.5 mt-0.5">
+            {validDate ? (
+              <p className={`text-xs ${isExpiring ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
+                Val: {format(validDate, 'dd/MM/yy')}
+                {isExpiring && ` (${daysToExpiry}d)`}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">Sem validade</p>
+            )}
+            <button
+              onClick={() => onAction('lotes')}
+              className="text-muted-foreground hover:text-primary transition-colors"
+              aria-label="Editar validade"
+            >
+              <Pencil size={11} />
+            </button>
+          </div>
         </div>
         <div className="text-right shrink-0">
-          <p className={`text-lg font-display font-bold ${alerta.level === 'critico' ? 'text-destructive' : alerta.level === 'atencao' ? 'text-warning' : 'text-foreground'}`}>
-            {produto.estoque_total}
-          </p>
+          <button
+            onClick={() => onAction('ajustar')}
+            className="group flex items-center gap-1 ml-auto"
+            aria-label="Ajustar quantidade"
+          >
+            <Pencil size={11} className="text-muted-foreground group-hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+            <p className={`text-lg font-display font-bold ${alerta.level === 'critico' ? 'text-destructive' : alerta.level === 'atencao' ? 'text-warning' : 'text-foreground'}`}>
+              {produto.estoque_total}
+            </p>
+          </button>
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">un.</p>
         </div>
       </div>
@@ -118,14 +145,24 @@ function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onActi
       )}
 
       <div className="grid grid-cols-2 gap-2">
-        <div className="bg-muted/50 rounded-lg px-3 py-2">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Compra</p>
+        <button
+          onClick={() => onAction('editar')}
+          className="bg-muted/50 rounded-lg px-3 py-2 text-left hover:bg-muted transition-colors group"
+        >
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+            Compra <Pencil size={9} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+          </p>
           <p className="text-sm font-semibold">R$ {Number(produto.preco_compra).toFixed(2)}</p>
-        </div>
-        <div className="bg-muted/50 rounded-lg px-3 py-2">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Venda</p>
+        </button>
+        <button
+          onClick={() => onAction('editar')}
+          className="bg-muted/50 rounded-lg px-3 py-2 text-left hover:bg-muted transition-colors group"
+        >
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+            Venda <Pencil size={9} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+          </p>
           <p className="text-sm font-semibold">R$ {Number(produto.preco_venda).toFixed(2)}</p>
-        </div>
+        </button>
       </div>
 
       <button
