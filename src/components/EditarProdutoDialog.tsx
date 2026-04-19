@@ -146,20 +146,26 @@ export default function EditarProdutoDialog({ produto, open, onOpenChange }: Pro
           {lotesAtivos.length > 0 && (
             <div className="space-y-2 pt-2 border-t border-border">
               <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <Layers size={12} /> Validade por lote
+                <Layers size={12} /> Lotes em estoque (quantidade e validade)
               </Label>
               {lotesAtivos.map(lote => (
-                <div key={lote.id} className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground w-16 shrink-0">{lote.quantidade_lote} un.</span>
+                <div key={lote.id} className="grid grid-cols-[80px_1fr] gap-2 items-center">
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    value={quantidades[lote.id] ?? ''}
+                    onChange={(e) => setQuantidades(prev => ({ ...prev, [lote.id]: e.target.value }))}
+                    placeholder="Qtd"
+                  />
                   <Input
                     type="date"
                     value={validades[lote.id] || ''}
                     onChange={(e) => setValidades(prev => ({ ...prev, [lote.id]: e.target.value }))}
-                    className="flex-1"
                   />
                 </div>
               ))}
-              <p className="text-[10px] text-muted-foreground">Para gestão completa de lotes (quantidade, exclusão), use o botão "Lotes".</p>
+              <p className="text-[10px] text-muted-foreground">Para excluir lotes ou criar novos, use o botão "Lotes".</p>
             </div>
           )}
         </div>
