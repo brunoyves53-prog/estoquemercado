@@ -104,11 +104,15 @@ export default function Cadastro() {
   const [searchParams] = useSearchParams();
   const cadastrar = useCadastrarProduto();
   const buscarPorCodigo = useProdutoPorCodigo();
+  const registrarCompra = useRegistrarCompra();
 
   const [nome, setNome] = useState('');
   const [codigo, setCodigo] = useState(searchParams.get('codigo') || '');
   const [precoCompra, setPrecoCompra] = useState('');
   const [precoVenda, setPrecoVenda] = useState('');
+  const [quantidadeInicial, setQuantidadeInicial] = useState('');
+  const [validadeInicial, setValidadeInicial] = useState('');
+  const [cicloReposicao, setCicloReposicao] = useState('30');
   const [imagemUrl, setImagemUrl] = useState<string | null>(null);
   const [marca, setMarca] = useState('');
   const [showScanner, setShowScanner] = useState(false);
@@ -126,6 +130,8 @@ export default function Cadastro() {
     setMarca('');
     setPrecoCompra('');
     setPrecoVenda('');
+    setQuantidadeInicial('');
+    setValidadeInicial('');
     setCodigoStatus('idle');
     setDuplicateNome('');
     setProdutoNaoEncontrado(false);
