@@ -10,6 +10,7 @@ import { calcularAlerta, AlertLevel } from '@/lib/alertUtils';
 import EditarProdutoDialog from '@/components/EditarProdutoDialog';
 import AjustarEstoqueDialog from '@/components/AjustarEstoqueDialog';
 import HistoricoProdutoDialog from '@/components/HistoricoProdutoDialog';
+import GerenciarLotesDialog from '@/components/GerenciarLotesDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
