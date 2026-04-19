@@ -358,8 +358,29 @@ export default function Cadastro() {
           </div>
         </div>
 
-        <Button size="xl" className="w-full" onClick={handleSubmit} disabled={cadastrar.isPending || codigoStatus === 'duplicate'}>
-          {cadastrar.isPending ? 'Cadastrando...' : 'Cadastrar Produto'}
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
+          <div>
+            <p className="text-sm font-semibold text-primary">Estoque inicial (opcional)</p>
+            <p className="text-[11px] text-muted-foreground">Se informar quantidade, o sistema cria também o lote/compra inicial.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Quantidade</Label>
+              <Input type="number" inputMode="numeric" placeholder="0" value={quantidadeInicial} onChange={(e) => setQuantidadeInicial(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Validade</Label>
+              <Input type="date" value={validadeInicial} onChange={(e) => setValidadeInicial(e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">Ciclo de reposição (dias)</Label>
+            <Input type="number" inputMode="numeric" placeholder="30" value={cicloReposicao} onChange={(e) => setCicloReposicao(e.target.value)} />
+          </div>
+        </div>
+
+        <Button size="xl" className="w-full" onClick={handleSubmit} disabled={cadastrar.isPending || registrarCompra.isPending || codigoStatus === 'duplicate'}>
+          {cadastrar.isPending || registrarCompra.isPending ? 'Salvando...' : 'Cadastrar Produto'}
         </Button>
       </div>
     </div>
