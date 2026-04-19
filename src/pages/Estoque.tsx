@@ -146,18 +146,21 @@ function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onActi
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => onAction('editar')}>
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => onAction('lotes')}>
+              <Layers size={13} /> Lotes
+            </Button>
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => onAction('editar')}>
               <Pencil size={13} /> Editar
             </Button>
-            <Button variant="outline" size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => onAction('ajustar')}>
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => onAction('ajustar')}>
               <PackagePlus size={13} /> Ajustar
             </Button>
-            <Button variant="outline" size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => onAction('historico')}>
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => onAction('historico')}>
               <History size={13} /> Histórico
             </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8 text-destructive hover:text-destructive shrink-0" onClick={() => onAction('excluir')}>
-              <Trash2 size={13} />
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs col-span-2 text-destructive hover:text-destructive" onClick={() => onAction('excluir')}>
+              <Trash2 size={13} /> Excluir produto
             </Button>
           </div>
         </div>
