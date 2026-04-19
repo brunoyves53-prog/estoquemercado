@@ -240,6 +240,9 @@ export default function Estoque() {
       {selectedProduto && dialogType === 'historico' && (
         <HistoricoProdutoDialog produto={selectedProduto} open onOpenChange={(o) => !o && closeDialog()} />
       )}
+      {selectedProduto && dialogType === 'lotes' && (
+        <GerenciarLotesDialog produto={selectedProduto} open onOpenChange={(o) => !o && closeDialog()} />
+      )}
       {selectedProduto && dialogType === 'excluir' && (
         <AlertDialog open onOpenChange={(o) => !o && closeDialog()}>
           <AlertDialogContent>
