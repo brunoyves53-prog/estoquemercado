@@ -31,9 +31,13 @@ export default function EditarProdutoDialog({ produto, open, onOpenChange }: Pro
   const [validades, setValidades] = useState<Record<string, string>>(() =>
     Object.fromEntries(lotesAtivos.map(l => [l.id, l.data_validade || '']))
   );
+  const [quantidades, setQuantidades] = useState<Record<string, string>>(() =>
+    Object.fromEntries(lotesAtivos.map(l => [l.id, String(l.quantidade_lote)]))
+  );
 
   useEffect(() => {
     setValidades(Object.fromEntries(lotesAtivos.map(l => [l.id, l.data_validade || ''])));
+    setQuantidades(Object.fromEntries(lotesAtivos.map(l => [l.id, String(l.quantidade_lote)])));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [produto.id]);
 
@@ -74,15 +78,19 @@ export default function EditarProdutoDialog({ produto, open, onOpenChange }: Pro
         media_venda_mensal: parseFloat(mediaVenda) || 0,
       });
 
-      // Atualizar validades dos lotes que mudaram
+      // Atualizar validades e quantidades dos lotes que mudaram
       for (const lote of lotesAtivos) {
         const novaValidade = validades[lote.id] || '';
-        const antiga = lote.data_validade || '';
-        if (novaValidade !== antiga) {
-          await atualizarLote.mutateAsync({
-            id: lote.id,
-            data_validade: novaValidade || null,
-          });
+        const antigaValidade = lote.data_validade || '';
+        const novaQtd = parseInt(quantidades[lote.id] || '0');
+        const antigaQtd = lote.quantidade_lote;
+
+        const updates: { data_validade?: string | null; quantidade_lote?: number } = {};
+        if (novaValidade !== antigaValidade) updates.data_validade = novaValidade || null;
+        if (!isNaN(novaQtd) && novaQtd !== antigaQtd && novaQtd >= 0) updates.quantidade_lote = novaQtd;
+
+        if (Object.keys(updates).length > 0) {
+          await atualizarLote.mutateAsync({ id: lote.id, ...updates });
         }
       }
 
@@ -138,20 +146,26 @@ export default function EditarProdutoDialog({ produto, open, onOpenChange }: Pro
           {lotesAtivos.length > 0 && (
             <div className="space-y-2 pt-2 border-t border-border">
               <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <Layers size={12} /> Validade por lote
+                <Layers size={12} /> Lotes em estoque (quantidade e validade)
               </Label>
               {lotesAtivos.map(lote => (
-                <div key={lote.id} className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground w-16 shrink-0">{lote.quantidade_lote} un.</span>
+                <div key={lote.id} className="grid grid-cols-[80px_1fr] gap-2 items-center">
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    value={quantidades[lote.id] ?? ''}
+                    onChange={(e) => setQuantidades(prev => ({ ...prev, [lote.id]: e.target.value }))}
+                    placeholder="Qtd"
+                  />
                   <Input
                     type="date"
                     value={validades[lote.id] || ''}
                     onChange={(e) => setValidades(prev => ({ ...prev, [lote.id]: e.target.value }))}
-                    className="flex-1"
                   />
                 </div>
               ))}
-              <p className="text-[10px] text-muted-foreground">Para gestão completa de lotes (quantidade, exclusão), use o botão "Lotes".</p>
+              <p className="text-[10px] text-muted-foreground">Para excluir lotes ou criar novos, use o botão "Lotes".</p>
             </div>
           )}
         </div>
