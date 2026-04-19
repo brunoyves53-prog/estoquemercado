@@ -48,7 +48,7 @@ export default function AppSidebar() {
               className="h-9 w-auto object-contain" 
             />
             {!collapsed && (
-              <span className="text-base font-display font-bold text-foreground tracking-tight">
+              <span className="text-base font-display font-bold text-primary tracking-tight">
                 Honest Market
               </span>
             )}
