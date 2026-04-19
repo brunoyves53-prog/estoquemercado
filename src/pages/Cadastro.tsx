@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useCadastrarProduto, useProdutoPorCodigo } from '@/hooks/useProdutos';
+import { useCadastrarProduto, useProdutoPorCodigo, useRegistrarCompra } from '@/hooks/useProdutos';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
