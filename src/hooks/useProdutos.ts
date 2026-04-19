@@ -237,6 +237,38 @@ export function useAjustarEstoque() {
   });
 }
 
+export function useAtualizarLote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { id: string; quantidade_lote?: number; data_validade?: string | null }) => {
+      const { id, ...updates } = params;
+      const { data, error } = await supabase.from('lotes').update(updates as any).eq('id', id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['produtos'] });
+      qc.invalidateQueries({ queryKey: ['lotes'] });
+    },
+  });
+}
+
+export function useExcluirLote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (loteId: string) => {
+      await supabase.from('movimentacoes').delete().eq('lote_id', loteId);
+      const { error } = await supabase.from('lotes').delete().eq('id', loteId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['produtos'] });
+      qc.invalidateQueries({ queryKey: ['lotes'] });
+      qc.invalidateQueries({ queryKey: ['movimentacoes'] });
+    },
+  });
+}
+
 export function useMovimentacoesProduto(produtoId?: string) {
   return useQuery({
     queryKey: ['movimentacoes', produtoId],
