@@ -98,9 +98,13 @@ function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onActi
           </Badge>
         )}
         {lotes.length > 0 && (
-          <Badge variant="secondary" className="text-[10px] cursor-pointer" onClick={() => setShowLotes(!showLotes)}>
+          <Badge
+            variant="secondary"
+            className="text-[10px] cursor-pointer hover:bg-primary/20"
+            onClick={() => onAction('lotes')}
+          >
             <Layers size={10} className="mr-1" />
-            {lotes.length} lote{lotes.length !== 1 ? 's' : ''}
+            {lotes.length} lote{lotes.length !== 1 ? 's' : ''} • Gerenciar
           </Badge>
         )}
       </div>
