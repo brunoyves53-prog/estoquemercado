@@ -14,7 +14,7 @@ import GerenciarLotesDialog from '@/components/GerenciarLotesDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
-type DialogType = 'editar' | 'ajustar' | 'historico' | 'excluir';
+type DialogType = 'editar' | 'ajustar' | 'historico' | 'excluir' | 'lotes';
 
 const alertStyles: Record<AlertLevel, string> = {
   critico: 'bg-destructive text-destructive-foreground',
