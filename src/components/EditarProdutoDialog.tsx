@@ -78,15 +78,19 @@ export default function EditarProdutoDialog({ produto, open, onOpenChange }: Pro
         media_venda_mensal: parseFloat(mediaVenda) || 0,
       });
 
-      // Atualizar validades dos lotes que mudaram
+      // Atualizar validades e quantidades dos lotes que mudaram
       for (const lote of lotesAtivos) {
         const novaValidade = validades[lote.id] || '';
-        const antiga = lote.data_validade || '';
-        if (novaValidade !== antiga) {
-          await atualizarLote.mutateAsync({
-            id: lote.id,
-            data_validade: novaValidade || null,
-          });
+        const antigaValidade = lote.data_validade || '';
+        const novaQtd = parseInt(quantidades[lote.id] || '0');
+        const antigaQtd = lote.quantidade_lote;
+
+        const updates: { data_validade?: string | null; quantidade_lote?: number } = {};
+        if (novaValidade !== antigaValidade) updates.data_validade = novaValidade || null;
+        if (!isNaN(novaQtd) && novaQtd !== antigaQtd && novaQtd >= 0) updates.quantidade_lote = novaQtd;
+
+        if (Object.keys(updates).length > 0) {
+          await atualizarLote.mutateAsync({ id: lote.id, ...updates });
         }
       }
 
