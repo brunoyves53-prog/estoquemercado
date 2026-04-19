@@ -14,7 +14,6 @@ export function useProdutos() {
       const { data: lotes } = await supabase
         .from('lotes')
         .select('*')
-        .gt('quantidade_lote', 0)
         .order('data_validade', { ascending: true });
 
       return (produtos || []).map((p: any) => {
