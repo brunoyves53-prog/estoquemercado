@@ -1,12 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAtualizarProduto, useProdutoPorCodigo } from '@/hooks/useProdutos';
+import { useAtualizarProduto, useProdutoPorCodigo, useAtualizarLote } from '@/hooks/useProdutos';
 import { ProdutoComEstoque } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Layers } from 'lucide-react';
 
 interface Props {
   produto: ProdutoComEstoque;
@@ -16,6 +16,7 @@ interface Props {
 
 export default function EditarProdutoDialog({ produto, open, onOpenChange }: Props) {
   const atualizar = useAtualizarProduto();
+  const atualizarLote = useAtualizarLote();
   const buscarPorCodigo = useProdutoPorCodigo();
 
   const [nome, setNome] = useState(produto.nome_produto);
@@ -25,6 +26,16 @@ export default function EditarProdutoDialog({ produto, open, onOpenChange }: Pro
   const [mediaVenda, setMediaVenda] = useState(String(produto.media_venda_mensal));
   const [codigoDuplicado, setCodigoDuplicado] = useState(false);
   const [duplicateNome, setDuplicateNome] = useState('');
+
+  const lotesAtivos = (produto.lotes || []).filter(l => l.quantidade_lote > 0);
+  const [validades, setValidades] = useState<Record<string, string>>(() =>
+    Object.fromEntries(lotesAtivos.map(l => [l.id, l.data_validade || '']))
+  );
+
+  useEffect(() => {
+    setValidades(Object.fromEntries(lotesAtivos.map(l => [l.id, l.data_validade || ''])));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [produto.id]);
 
   const verificarCodigo = useCallback(async () => {
     if (codigo.trim() === produto.codigo_barras) {
@@ -62,6 +73,19 @@ export default function EditarProdutoDialog({ produto, open, onOpenChange }: Pro
         preco_venda: parseFloat(precoVenda) || 0,
         media_venda_mensal: parseFloat(mediaVenda) || 0,
       });
+
+      // Atualizar validades dos lotes que mudaram
+      for (const lote of lotesAtivos) {
+        const novaValidade = validades[lote.id] || '';
+        const antiga = lote.data_validade || '';
+        if (novaValidade !== antiga) {
+          await atualizarLote.mutateAsync({
+            id: lote.id,
+            data_validade: novaValidade || null,
+          });
+        }
+      }
+
       toast.success('Produto atualizado!');
       onOpenChange(false);
     } catch (err: any) {
@@ -71,7 +95,7 @@ export default function EditarProdutoDialog({ produto, open, onOpenChange }: Pro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar Produto</DialogTitle>
         </DialogHeader>
@@ -110,11 +134,31 @@ export default function EditarProdutoDialog({ produto, open, onOpenChange }: Pro
             <Label className="text-xs text-muted-foreground mb-1 block">Média Venda Mensal</Label>
             <Input type="number" inputMode="numeric" value={mediaVenda} onChange={(e) => setMediaVenda(e.target.value)} />
           </div>
+
+          {lotesAtivos.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-border">
+              <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Layers size={12} /> Validade por lote
+              </Label>
+              {lotesAtivos.map(lote => (
+                <div key={lote.id} className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground w-16 shrink-0">{lote.quantidade_lote} un.</span>
+                  <Input
+                    type="date"
+                    value={validades[lote.id] || ''}
+                    onChange={(e) => setValidades(prev => ({ ...prev, [lote.id]: e.target.value }))}
+                    className="flex-1"
+                  />
+                </div>
+              ))}
+              <p className="text-[10px] text-muted-foreground">Para gestão completa de lotes (quantidade, exclusão), use o botão "Lotes".</p>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSave} disabled={atualizar.isPending || codigoDuplicado}>
-            {atualizar.isPending ? 'Salvando...' : 'Salvar'}
+          <Button onClick={handleSave} disabled={atualizar.isPending || atualizarLote.isPending || codigoDuplicado}>
+            {atualizar.isPending || atualizarLote.isPending ? 'Salvando...' : 'Salvar'}
           </Button>
         </DialogFooter>
       </DialogContent>
