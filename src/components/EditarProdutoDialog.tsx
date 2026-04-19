@@ -31,9 +31,13 @@ export default function EditarProdutoDialog({ produto, open, onOpenChange }: Pro
   const [validades, setValidades] = useState<Record<string, string>>(() =>
     Object.fromEntries(lotesAtivos.map(l => [l.id, l.data_validade || '']))
   );
+  const [quantidades, setQuantidades] = useState<Record<string, string>>(() =>
+    Object.fromEntries(lotesAtivos.map(l => [l.id, String(l.quantidade_lote)]))
+  );
 
   useEffect(() => {
     setValidades(Object.fromEntries(lotesAtivos.map(l => [l.id, l.data_validade || ''])));
+    setQuantidades(Object.fromEntries(lotesAtivos.map(l => [l.id, String(l.quantidade_lote)])));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [produto.id]);
 
