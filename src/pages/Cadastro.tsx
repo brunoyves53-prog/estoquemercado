@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useCadastrarProduto, useProdutoPorCodigo } from '@/hooks/useProdutos';
+import { useCadastrarProduto, useProdutoPorCodigo, useRegistrarCompra } from '@/hooks/useProdutos';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -104,11 +104,15 @@ export default function Cadastro() {
   const [searchParams] = useSearchParams();
   const cadastrar = useCadastrarProduto();
   const buscarPorCodigo = useProdutoPorCodigo();
+  const registrarCompra = useRegistrarCompra();
 
   const [nome, setNome] = useState('');
   const [codigo, setCodigo] = useState(searchParams.get('codigo') || '');
   const [precoCompra, setPrecoCompra] = useState('');
   const [precoVenda, setPrecoVenda] = useState('');
+  const [quantidadeInicial, setQuantidadeInicial] = useState('');
+  const [validadeInicial, setValidadeInicial] = useState('');
+  const [cicloReposicao, setCicloReposicao] = useState('30');
   const [imagemUrl, setImagemUrl] = useState<string | null>(null);
   const [marca, setMarca] = useState('');
   const [showScanner, setShowScanner] = useState(false);
@@ -126,6 +130,8 @@ export default function Cadastro() {
     setMarca('');
     setPrecoCompra('');
     setPrecoVenda('');
+    setQuantidadeInicial('');
+    setValidadeInicial('');
     setCodigoStatus('idle');
     setDuplicateNome('');
     setProdutoNaoEncontrado(false);
@@ -213,8 +219,9 @@ export default function Cadastro() {
   const handleSubmit = async () => {
     if (!nome || !codigo) { toast.error('Nome e código de barras são obrigatórios'); return; }
     if (codigoStatus === 'duplicate') { toast.error('Este código de barras já está cadastrado.'); return; }
+    const qtdInicial = parseInt(quantidadeInicial) || 0;
     try {
-      await cadastrar.mutateAsync({
+      const novoProduto = await cadastrar.mutateAsync({
         nome_produto: nome.trim(),
         codigo_barras: codigo.trim(),
         preco_compra: parseFloat(precoCompra) || 0,
@@ -222,8 +229,21 @@ export default function Cadastro() {
         media_venda_mensal: 0,
         imagem_url: imagemUrl || null,
       });
-      toast.success('Produto cadastrado!');
+
+      if (qtdInicial > 0 && novoProduto?.id) {
+        await registrarCompra.mutateAsync({
+          produto_id: novoProduto.id,
+          quantidade: qtdInicial,
+          data_validade: validadeInicial || null,
+          ciclo_reposicao: parseInt(cicloReposicao) || 30,
+        });
+        toast.success(`Produto cadastrado com ${qtdInicial} un. em estoque!`);
+      } else {
+        toast.success('Produto cadastrado!');
+      }
+
       setNome(''); setCodigo(''); setPrecoCompra(''); setPrecoVenda('');
+      setQuantidadeInicial(''); setValidadeInicial(''); setCicloReposicao('30');
       setImagemUrl(null); setMarca(''); setCodigoStatus('idle'); setProdutoNaoEncontrado(false);
     } catch (err: any) {
       if (err.message?.includes('unique') || err.message?.includes('duplicate')) {
@@ -236,7 +256,7 @@ export default function Cadastro() {
     <div className="page-container">
       <div className="px-6 py-4 border-b border-border">
         <h1 className="text-2xl font-display font-bold">Cadastrar Produto</h1>
-        <p className="text-xs text-muted-foreground mt-1">Cadastro base — sem estoque. Use Compras para dar entrada.</p>
+        <p className="text-xs text-muted-foreground mt-1">Cadastre o produto e dê entrada no estoque em uma única etapa.</p>
       </div>
 
       {showScanner && (
@@ -338,8 +358,29 @@ export default function Cadastro() {
           </div>
         </div>
 
-        <Button size="xl" className="w-full" onClick={handleSubmit} disabled={cadastrar.isPending || codigoStatus === 'duplicate'}>
-          {cadastrar.isPending ? 'Cadastrando...' : 'Cadastrar Produto'}
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
+          <div>
+            <p className="text-sm font-semibold text-primary">Estoque inicial (opcional)</p>
+            <p className="text-[11px] text-muted-foreground">Se informar quantidade, o sistema cria também o lote/compra inicial.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Quantidade</Label>
+              <Input type="number" inputMode="numeric" placeholder="0" value={quantidadeInicial} onChange={(e) => setQuantidadeInicial(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Validade</Label>
+              <Input type="date" value={validadeInicial} onChange={(e) => setValidadeInicial(e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">Ciclo de reposição (dias)</Label>
+            <Input type="number" inputMode="numeric" placeholder="30" value={cicloReposicao} onChange={(e) => setCicloReposicao(e.target.value)} />
+          </div>
+        </div>
+
+        <Button size="xl" className="w-full" onClick={handleSubmit} disabled={cadastrar.isPending || registrarCompra.isPending || codigoStatus === 'duplicate'}>
+          {cadastrar.isPending || registrarCompra.isPending ? 'Salvando...' : 'Cadastrar Produto'}
         </Button>
       </div>
     </div>
