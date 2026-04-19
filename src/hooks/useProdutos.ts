@@ -18,8 +18,8 @@ export function useProdutos() {
 
       return (produtos || []).map((p: any) => {
         const prodLotes = (lotes || []).filter((l: any) => l.produto_id === p.id);
-        const estoque_total = prodLotes.reduce((sum: number, l: any) => sum + l.quantidade_lote, 0);
-        const proxima_validade = prodLotes.find((l: any) => l.data_validade)?.data_validade || null;
+        const estoque_total = prodLotes.reduce((sum: number, l: any) => sum + Math.max(0, l.quantidade_lote), 0);
+        const proxima_validade = prodLotes.find((l: any) => l.data_validade && l.quantidade_lote > 0)?.data_validade || null;
         return { ...p, estoque_total, proxima_validade, lotes: prodLotes } as ProdutoComEstoque;
       });
     },
