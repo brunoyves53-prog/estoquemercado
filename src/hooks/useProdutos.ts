@@ -14,13 +14,12 @@ export function useProdutos() {
       const { data: lotes } = await supabase
         .from('lotes')
         .select('*')
-        .gt('quantidade_lote', 0)
         .order('data_validade', { ascending: true });
 
       return (produtos || []).map((p: any) => {
         const prodLotes = (lotes || []).filter((l: any) => l.produto_id === p.id);
-        const estoque_total = prodLotes.reduce((sum: number, l: any) => sum + l.quantidade_lote, 0);
-        const proxima_validade = prodLotes.find((l: any) => l.data_validade)?.data_validade || null;
+        const estoque_total = prodLotes.reduce((sum: number, l: any) => sum + Math.max(0, l.quantidade_lote), 0);
+        const proxima_validade = prodLotes.find((l: any) => l.data_validade && l.quantidade_lote > 0)?.data_validade || null;
         return { ...p, estoque_total, proxima_validade, lotes: prodLotes } as ProdutoComEstoque;
       });
     },
@@ -228,6 +227,38 @@ export function useAjustarEstoque() {
         }
         if (remaining > 0) throw new Error('Estoque insuficiente para o ajuste');
       }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['produtos'] });
+      qc.invalidateQueries({ queryKey: ['lotes'] });
+      qc.invalidateQueries({ queryKey: ['movimentacoes'] });
+    },
+  });
+}
+
+export function useAtualizarLote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { id: string; quantidade_lote?: number; data_validade?: string | null }) => {
+      const { id, ...updates } = params;
+      const { data, error } = await supabase.from('lotes').update(updates as any).eq('id', id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['produtos'] });
+      qc.invalidateQueries({ queryKey: ['lotes'] });
+    },
+  });
+}
+
+export function useExcluirLote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (loteId: string) => {
+      await supabase.from('movimentacoes').delete().eq('lote_id', loteId);
+      const { error } = await supabase.from('lotes').delete().eq('id', loteId);
+      if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['produtos'] });

@@ -10,10 +10,11 @@ import { calcularAlerta, AlertLevel } from '@/lib/alertUtils';
 import EditarProdutoDialog from '@/components/EditarProdutoDialog';
 import AjustarEstoqueDialog from '@/components/AjustarEstoqueDialog';
 import HistoricoProdutoDialog from '@/components/HistoricoProdutoDialog';
+import GerenciarLotesDialog from '@/components/GerenciarLotesDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
-type DialogType = 'editar' | 'ajustar' | 'historico' | 'excluir';
+type DialogType = 'editar' | 'ajustar' | 'historico' | 'excluir' | 'lotes';
 
 const alertStyles: Record<AlertLevel, string> = {
   critico: 'bg-destructive text-destructive-foreground',
@@ -97,9 +98,13 @@ function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onActi
           </Badge>
         )}
         {lotes.length > 0 && (
-          <Badge variant="secondary" className="text-[10px] cursor-pointer" onClick={() => setShowLotes(!showLotes)}>
+          <Badge
+            variant="secondary"
+            className="text-[10px] cursor-pointer hover:bg-primary/20"
+            onClick={() => onAction('lotes')}
+          >
             <Layers size={10} className="mr-1" />
-            {lotes.length} lote{lotes.length !== 1 ? 's' : ''}
+            {lotes.length} lote{lotes.length !== 1 ? 's' : ''} • Gerenciar
           </Badge>
         )}
       </div>
@@ -141,18 +146,21 @@ function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onActi
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => onAction('editar')}>
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => onAction('lotes')}>
+              <Layers size={13} /> Lotes
+            </Button>
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => onAction('editar')}>
               <Pencil size={13} /> Editar
             </Button>
-            <Button variant="outline" size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => onAction('ajustar')}>
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => onAction('ajustar')}>
               <PackagePlus size={13} /> Ajustar
             </Button>
-            <Button variant="outline" size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => onAction('historico')}>
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => onAction('historico')}>
               <History size={13} /> Histórico
             </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8 text-destructive hover:text-destructive shrink-0" onClick={() => onAction('excluir')}>
-              <Trash2 size={13} />
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs col-span-2 text-destructive hover:text-destructive" onClick={() => onAction('excluir')}>
+              <Trash2 size={13} /> Excluir produto
             </Button>
           </div>
         </div>
@@ -231,6 +239,9 @@ export default function Estoque() {
       )}
       {selectedProduto && dialogType === 'historico' && (
         <HistoricoProdutoDialog produto={selectedProduto} open onOpenChange={(o) => !o && closeDialog()} />
+      )}
+      {selectedProduto && dialogType === 'lotes' && (
+        <GerenciarLotesDialog produto={selectedProduto} open onOpenChange={(o) => !o && closeDialog()} />
       )}
       {selectedProduto && dialogType === 'excluir' && (
         <AlertDialog open onOpenChange={(o) => !o && closeDialog()}>
