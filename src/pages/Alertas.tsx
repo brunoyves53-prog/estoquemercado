@@ -40,6 +40,41 @@ export default function Alertas() {
       </div>
 
       <div className="p-6 space-y-6">
+        {/* Sem estoque */}
+        <div>
+          <h2 className="flex items-center gap-2 text-sm font-display font-semibold text-destructive mb-3 uppercase tracking-wider">
+            <PackageX size={16} />
+            Sem estoque ({semEstoque.length})
+          </h2>
+          {semEstoque.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">Nenhum produto sem estoque</p>
+          )}
+          {semEstoque.map(p => (
+            <div key={p.id} className="stat-card border-destructive/60 bg-destructive/5 mb-2">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                  {p.imagem_url ? (
+                    <img src={p.imagem_url} alt={p.nome_produto} className="h-full w-full object-cover" />
+                  ) : (
+                    <Package size={18} className="text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <AlertTriangle size={12} className="text-destructive shrink-0" />
+                    <p className="text-sm font-medium text-destructive truncate">{p.nome_produto}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-mono">{p.codigo_barras}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-lg font-display font-bold text-destructive">{p.estoque_total}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">un.</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
         {/* Critical */}
         <div>
           <h2 className="flex items-center gap-2 text-sm font-display font-semibold text-destructive mb-3 uppercase tracking-wider">
