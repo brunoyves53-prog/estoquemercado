@@ -1,6 +1,6 @@
 import { useProdutos } from '@/hooks/useProdutos';
 import { useMovimentacoes } from '@/hooks/useProdutos';
-import { Package, AlertTriangle, TrendingDown, Calendar, ShoppingCart, ArrowDownToLine, ScanBarcode } from 'lucide-react';
+import { Package, AlertTriangle, TrendingDown, Calendar, ShoppingCart, ArrowDownToLine, ScanBarcode, PackageX } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -11,7 +11,8 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const emEstoque = produtos.filter(p => p.estoque_total > 0);
-  const totalProdutos = emEstoque.length;
+  const semEstoque = produtos.filter(p => p.estoque_total <= 0);
+  const totalProdutos = produtos.length;
   const totalEstoque = emEstoque.reduce((s, p) => s + p.estoque_total, 0);
   const alertas = emEstoque.filter(p => calcularAlerta(p).level !== 'normal').length;
   const vencendo = emEstoque.filter(p => {
@@ -52,13 +53,13 @@ export default function Dashboard() {
             </div>
             <p className="text-3xl font-display font-bold text-warning">{alertas}</p>
           </div>
-          <div className="stat-card border-destructive/30">
+          <button onClick={() => navigate('/alertas')} className="stat-card border-destructive/30 text-left">
             <div className="flex items-center gap-2 text-destructive mb-1">
-              <Calendar size={16} />
-              <span className="text-xs font-medium">Vencendo (30d)</span>
+              <PackageX size={16} />
+              <span className="text-xs font-medium">Sem estoque</span>
             </div>
-            <p className="text-3xl font-display font-bold text-destructive">{vencendo}</p>
-          </div>
+            <p className="text-3xl font-display font-bold text-destructive">{semEstoque.length}</p>
+          </button>
         </div>
 
         {/* Quick Actions */}
