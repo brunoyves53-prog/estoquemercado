@@ -1,6 +1,6 @@
 import { useProdutos, useExcluirProduto } from '@/hooks/useProdutos';
 import { format, parseISO, differenceInDays, isValid } from 'date-fns';
-import { Search, Pencil, PackagePlus, History, Trash2, Package, ChevronDown, ChevronUp, Layers } from 'lucide-react';
+import { Search, Pencil, PackagePlus, History, Trash2, Package, ChevronDown, ChevronUp, Layers, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -62,9 +62,10 @@ function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onActi
 
   const alerta = calcularAlerta(produto);
   const lotes = produto.lotes || [];
+  const semEstoque = produto.estoque_total <= 0;
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+    <div className={`rounded-xl border p-4 space-y-3 ${semEstoque ? 'border-destructive/60 bg-destructive/5' : 'border-border bg-card'}`}>
       <div className="flex items-start gap-3">
         <div className="h-14 w-14 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border/50">
           {produto.imagem_url ? (
@@ -75,7 +76,8 @@ function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onActi
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <p className="font-semibold text-sm truncate flex-1">{produto.nome_produto}</p>
+            {semEstoque && <AlertTriangle size={14} className="text-destructive shrink-0" />}
+            <p className={`font-semibold text-sm truncate flex-1 ${semEstoque ? 'text-destructive' : ''}`}>{produto.nome_produto}</p>
             <button
               onClick={() => onAction('editar')}
               className="text-muted-foreground hover:text-primary transition-colors shrink-0"
@@ -119,7 +121,12 @@ function ProductCard({ produto, onAction }: { produto: ProdutoComEstoque; onActi
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">
-        {alerta.level !== 'normal' && alerta.label && (
+        {semEstoque && (
+          <Badge className="bg-destructive text-destructive-foreground text-[10px] font-medium gap-1">
+            <AlertTriangle size={10} /> Sem estoque
+          </Badge>
+        )}
+        {!semEstoque && alerta.level !== 'normal' && alerta.label && (
           <Badge className={`${alertStyles[alerta.level]} text-[10px] font-medium`}>
             {alerta.label}
           </Badge>
@@ -213,12 +220,19 @@ export default function Estoque() {
   const [dialogType, setDialogType] = useState<DialogType | null>(null);
   const excluir = useExcluirProduto();
 
-  const emEstoque = produtos.filter(p => p.estoque_total > 0);
+  const filtered = produtos
+    .filter(p =>
+      p.nome_produto.toLowerCase().includes(search.toLowerCase()) ||
+      p.codigo_barras.includes(search)
+    )
+    .sort((a, b) => {
+      const aZero = a.estoque_total <= 0 ? 0 : 1;
+      const bZero = b.estoque_total <= 0 ? 0 : 1;
+      if (aZero !== bZero) return aZero - bZero;
+      return a.nome_produto.localeCompare(b.nome_produto);
+    });
 
-  const filtered = emEstoque.filter(p =>
-    p.nome_produto.toLowerCase().includes(search.toLowerCase()) ||
-    p.codigo_barras.includes(search)
-  );
+  const semEstoqueCount = produtos.filter(p => p.estoque_total <= 0).length;
 
   const openDialog = (produto: ProdutoComEstoque, type: DialogType) => {
     setSelectedProduto(produto);
@@ -234,7 +248,10 @@ export default function Estoque() {
     <div className="page-container">
       <div className="px-6 py-4 border-b border-border">
         <h1 className="text-2xl font-display font-bold">Estoque</h1>
-        <p className="text-xs text-muted-foreground mt-1">{filtered.length} produto{filtered.length !== 1 ? 's' : ''} em estoque</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          {filtered.length} produto{filtered.length !== 1 ? 's' : ''}
+          {semEstoqueCount > 0 && <span className="text-destructive"> • {semEstoqueCount} sem estoque</span>}
+        </p>
       </div>
       <div className="p-6 space-y-4">
         <div className="relative max-w-md">
@@ -251,7 +268,7 @@ export default function Estoque() {
 
         {!isLoading && filtered.length === 0 && (
           <p className="text-center text-sm text-muted-foreground py-8">
-            {search ? 'Nenhum produto encontrado' : 'Nenhum produto em estoque. Registre uma compra para adicionar.'}
+            {search ? 'Nenhum produto encontrado' : 'Nenhum produto cadastrado. Registre uma compra para adicionar.'}
           </p>
         )}
 
