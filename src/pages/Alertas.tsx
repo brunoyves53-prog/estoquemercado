@@ -1,11 +1,12 @@
 import { useProdutos } from '@/hooks/useProdutos';
 import { differenceInDays, parseISO, format } from 'date-fns';
-import { AlertTriangle, Calendar, TrendingDown, Package } from 'lucide-react';
+import { AlertTriangle, Calendar, TrendingDown, Package, PackageX } from 'lucide-react';
 import { calcularAlerta } from '@/lib/alertUtils';
 
 export default function Alertas() {
   const { data: produtos = [] } = useProdutos();
 
+  const semEstoque = produtos.filter(p => p.estoque_total <= 0);
   const emEstoque = produtos.filter(p => p.estoque_total > 0);
 
   // Smart alerts based on consumption rate
