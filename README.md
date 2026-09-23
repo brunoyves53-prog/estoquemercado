@@ -1,73 +1,45 @@
-# Welcome to your Lovable project
+# Honest Market — Sistema de Gestão de Estoque
 
-## Project info
+Sistema web desenvolvido para facilitar o gerenciamento de estoque, com controle de produtos, lotes, validade, compras, retiradas e movimentações.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Demonstração
 
-## How can I edit this code?
+Acesse o sistema:
 
-There are several ways of editing your application.
+https://estoquemercado.lovable.app
 
-**Use Lovable**
+## Funcionalidades
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- Dashboard com visão geral do estoque
+- Cadastro e gerenciamento de produtos
+- Controle de quantidade em estoque
+- Gerenciamento de lotes
+- Registro de compras
+- Registro de retiradas
+- Leitura de código de barras
+- Controle de validade dos produtos
+- Alertas de estoque baixo
+- Alertas de produtos sem estoque
+- Alertas de produtos próximos ao vencimento
+- Histórico de movimentações
 
-Changes made via Lovable will be committed automatically to this repo.
+## Tecnologias utilizadas
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
+- React 18
 - TypeScript
-- React
-- shadcn-ui
+- Vite
+- Supabase
+- TanStack Query
+- React Router
 - Tailwind CSS
+- shadcn/ui
+- Radix UI
+- html5-qrcode
+- Vitest
 
-## How can I deploy this project?
+## Executando o projeto localmente
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Clone o repositório:
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+```bash
+git clone https://github.com/brunoyves53-prog/estoquemercado.git
