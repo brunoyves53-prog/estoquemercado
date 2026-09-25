@@ -4,9 +4,9 @@ Sistema web desenvolvido para facilitar o gerenciamento de estoque, com controle
 
 ## Demonstração
 
-Acesse o sistema:
+A aplicação está publicada em ambiente de produção, porém o acesso público não é disponibilizado para evitar alterações indevidas nos dados.
 
-https://estoquemercado.lovable.app
+Abaixo estão algumas telas do sistema demonstrando as principais funcionalidades.
 
 ## Funcionalidades
 
