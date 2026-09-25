@@ -44,7 +44,7 @@ Scripts disponíveis: `npm run dev`, `npm run build`, `npm run lint` e `npm run 
 
 ## Acesso à aplicação
 
-A instância com dados reais não oferece acesso público para edição. As imagens acima mostram o funcionamento sem expor os dados da aplicação. Para avaliar o código, consulte as páginas em [`src/pages`](src/pages), a integração em [`src/integrations/supabase`](src/integrations/supabase) e as migrações do banco.
+A instância em produção não oferece acesso público para edição. As imagens acima mostram o funcionamento sem expor os dados da aplicação. Para avaliar o código, consulte as páginas em [`src/pages`](src/pages), a integração em [`src/integrations/supabase`](src/integrations/supabase) e as migrações do banco.
 
 ## Autor
 
